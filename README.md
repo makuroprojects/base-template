@@ -7,9 +7,11 @@ Full-stack web application template built with Bun, Elysia, React 19, and Vite.
 - **Runtime**: [Bun](https://bun.com)
 - **Server**: [Elysia.js](https://elysiajs.com) with Vite middleware mode (dev) / static serving (prod)
 - **Frontend**: React 19 + [TanStack Router](https://tanstack.com/router) (file-based routing) + [TanStack Query](https://tanstack.com/query)
-- **UI**: [Mantine v8](https://mantine.dev) (dark theme) + [react-icons](https://react-icons.github.io/react-icons/)
+- **UI**: [Mantine v8](https://mantine.dev) (dark/light mode, auto default) + [react-icons](https://react-icons.github.io/react-icons/)
 - **Database**: PostgreSQL via [Prisma v6](https://www.prisma.io)
+- **Cache/Logs**: Redis via Bun native `Bun.RedisClient`
 - **Auth**: Session-based (bcrypt + HttpOnly cookies) + Google OAuth
+- **Real-time**: WebSocket presence (Bun native)
 - **Dev Tools**: Click-to-source inspector (Ctrl+Shift+Cmd+C), HMR, Biome linter
 - **Testing**: bun:test (unit + integration) + [Lightpanda](https://lightpanda.io) (E2E via CDP)
 
@@ -17,6 +19,7 @@ Full-stack web application template built with Bun, Elysia, React 19, and Vite.
 
 - [Bun](https://bun.sh) >= 1.3
 - PostgreSQL running on `localhost:5432`
+- Redis running on `localhost:6379`
 - [Lightpanda](https://github.com/lightpanda-io/browser) (optional, for E2E tests)
 
 ## Setup
@@ -27,7 +30,7 @@ bun install
 
 # Configure environment
 cp .env.example .env
-# Edit .env with your DATABASE_URL, Google OAuth credentials, etc.
+# Edit .env with your DATABASE_URL, REDIS_URL, Google OAuth credentials, etc.
 
 # Setup database
 bun run db:migrate
@@ -46,7 +49,7 @@ Features in dev mode:
 
 - Hot Module Replacement (HMR) via Vite
 - Click-to-source inspector: `Ctrl+Shift+Cmd+C` to toggle, click any component to open in editor
-- Splash screen (dark) prevents white flash on reload
+- Splash screen adapts to dark/light mode, prevents flash on reload
 
 ## Production
 
@@ -79,29 +82,33 @@ bun run start    # Start production server
 
 ```
 src/
-  index.tsx          # Server entry — Vite middleware, frontend serving, editor integration
-  app.ts             # Elysia app — API routes (auth, admin, hello, health, Google OAuth)
+  index.tsx          # Server entry — Vite middleware, frontend serving, audit log rotation
+  app.ts             # Elysia app — API routes (auth, admin, logs, presence, hello, health)
   serve.ts           # Dev entry (workaround for Bun EADDRINUSE)
   vite.ts            # Vite dev server config, inspector plugin, dedupe plugin
   frontend.tsx       # React entry — root render, splash removal, HMR
   lib/
     db.ts            # Prisma client singleton
     env.ts           # Environment variables
+    redis.ts         # Bun native Redis client singleton
+    applog.ts        # App log module (Redis-backed ring buffer)
+    presence.ts      # WebSocket presence tracker (in-memory)
   frontend/
-    App.tsx           # Root component — MantineProvider, QueryClient, Router
+    App.tsx           # Root component — MantineProvider (auto color scheme), QueryClient, Router
     DevInspector.tsx  # Click-to-source overlay (dev only)
     hooks/
       useAuth.ts     # useSession, useLogin, useLogout, getDefaultRoute
+      usePresence.ts # WebSocket presence hook (real-time online status)
     routes/
-      __root.tsx     # Root layout
+      __root.tsx     # Root layout with dark/light mode toggle
       index.tsx      # Landing page
       login.tsx      # Login page (email/password + Google OAuth)
-      dev.tsx        # Dev console — SUPER_ADMIN only, user management
-      dashboard.tsx  # Admin dashboard — ADMIN & SUPER_ADMIN
+      dev.tsx        # Dev console — SUPER_ADMIN only (users, app logs, user logs)
+      dashboard.tsx  # Admin dashboard — ADMIN & SUPER_ADMIN (stats, analytics, orders)
       profile.tsx    # User profile — all authenticated users
       blocked.tsx    # Blocked user info page
 prisma/
-  schema.prisma      # Database schema (User, Session, Role enum)
+  schema.prisma      # Database schema (User, Session, AuditLog, Role enum)
   seed.ts            # Seed script (superadmin, admin, user with bcrypt)
   migrations/        # Prisma migrations
 tests/
@@ -118,13 +125,14 @@ Three roles with hierarchical access:
 
 | Role | Default Route | Can Access | Description |
 |------|--------------|------------|-------------|
-| `SUPER_ADMIN` | `/dev` | `/dev`, `/dashboard`, `/profile` | Full system access, user management |
+| `SUPER_ADMIN` | `/dev` | `/dev`, `/dashboard`, `/profile` | Full system access, user management, logs |
 | `ADMIN` | `/dashboard` | `/dashboard`, `/profile` | Dashboard access with analytics |
 | `USER` | `/profile` | `/profile` | Profile only |
 
 - Default role for new users is `USER`
 - `SUPER_ADMIN` is assigned via seeder or `SUPER_ADMIN_EMAIL` env variable
 - Blocked users are redirected to `/blocked` and their sessions are invalidated
+- Tab state persisted in URL (`?tab=`) — survives page reload
 
 ## Auth
 
@@ -143,13 +151,40 @@ Demo users (seeded):
 
 ## Admin API
 
-SUPER_ADMIN-only endpoints for user management:
+SUPER_ADMIN-only endpoints:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/admin/users` | List all users |
 | `PUT` | `/api/admin/users/:id/role` | Change user role (USER/ADMIN) |
 | `PUT` | `/api/admin/users/:id/block` | Block/unblock user |
+| `GET` | `/api/admin/presence` | List online user IDs |
+| `GET` | `/api/admin/logs/app` | App logs (filter: level, limit, afterId) |
+| `GET` | `/api/admin/logs/audit` | Audit logs (filter: userId, action, limit) |
+| `DELETE` | `/api/admin/logs/app` | Clear all app logs |
+| `DELETE` | `/api/admin/logs/audit` | Clear all audit logs |
+
+## WebSocket
+
+| Endpoint | Description |
+|----------|-------------|
+| `WS /ws/presence` | Real-time user presence. Auth via session cookie. Broadcasts online users to admin subscribers. |
+
+## Logging
+
+| Type | Storage | Rotation | Description |
+|------|---------|----------|-------------|
+| **App Logs** | Redis List | Max 500 entries (LTRIM) | API requests, errors, auth events |
+| **Audit Logs** | PostgreSQL | Auto-cleanup > 90 days | LOGIN, LOGOUT, LOGIN_FAILED, ROLE_CHANGED, BLOCKED, etc. |
+
+Both can be viewed and manually cleared from the Dev Console (`/dev`).
+
+## Dark/Light Mode
+
+- Default follows device preference (`prefers-color-scheme`)
+- Toggle button on all pages (top-right corner)
+- Choice persisted in `localStorage` by Mantine
+- Flash-free reload: `index.html` reads `localStorage` before first paint
 
 ## E2E Tests (Lightpanda)
 
@@ -180,11 +215,13 @@ bun run test:e2e         # Run E2E tests
 
 ## Environment Variables
 
-| Variable               | Required | Description                                |
-| ---------------------- | -------- | ------------------------------------------ |
-| `DATABASE_URL`         | Yes      | PostgreSQL connection string               |
-| `GOOGLE_CLIENT_ID`     | Yes      | Google OAuth client ID                     |
-| `GOOGLE_CLIENT_SECRET` | Yes      | Google OAuth client secret                 |
-| `SUPER_ADMIN_EMAIL`    | No       | Comma-separated emails to auto-promote     |
-| `PORT`                 | No       | Server port (default: 3000)                |
-| `REACT_EDITOR`         | No       | Editor for click-to-source (default: code) |
+| Variable                   | Required | Description                                    |
+| -------------------------- | -------- | ---------------------------------------------- |
+| `DATABASE_URL`             | Yes      | PostgreSQL connection string                   |
+| `REDIS_URL`                | Yes      | Redis connection string                        |
+| `GOOGLE_CLIENT_ID`         | Yes      | Google OAuth client ID                         |
+| `GOOGLE_CLIENT_SECRET`     | Yes      | Google OAuth client secret                     |
+| `SUPER_ADMIN_EMAIL`        | No       | Comma-separated emails to auto-promote         |
+| `AUDIT_LOG_RETENTION_DAYS` | No       | Days to keep audit logs (default: 90)          |
+| `PORT`                     | No       | Server port (default: 3000)                    |
+| `REACT_EDITOR`             | No       | Editor for click-to-source (default: code)     |

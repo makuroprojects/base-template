@@ -11,25 +11,33 @@ Default to using Bun instead of Node.js.
 
 Elysia.js as the HTTP framework, running on Bun. API routes are in `src/app.ts` (exported as `createApp()`), frontend serving and dev tools are in `src/index.tsx`.
 
-- `src/app.ts` — Elysia app factory with all API routes (auth, admin, hello, health, Google OAuth). Testable via `app.handle(request)`.
-- `src/index.tsx` — Server entry. Adds Vite middleware (dev) or static file serving (prod), click-to-source editor integration, and `.listen()`.
+- `src/app.ts` — Elysia app factory with all API routes (auth, admin, logs, presence, hello, health, Google OAuth). Testable via `app.handle(request)`.
+- `src/index.tsx` — Server entry. Adds Vite middleware (dev) or static file serving (prod), click-to-source editor integration, audit log rotation, and `.listen()`.
 - `src/serve.ts` — Dev entry (`bun --watch src/serve.ts`). Dynamic import workaround for Bun EADDRINUSE race.
 
 ## Database
 
 PostgreSQL via Prisma v6. Client generated to `./generated/prisma` (gitignored).
 
-- Schema: `prisma/schema.prisma` — User (id, name, email, password, role, blocked, timestamps) + Session (id, token, userId, expiresAt)
+- Schema: `prisma/schema.prisma` — User (id, name, email, password, role, blocked, timestamps) + Session (id, token, userId, expiresAt) + AuditLog (id, userId, action, detail, ip, createdAt)
 - Roles: `USER`, `ADMIN`, `SUPER_ADMIN` (enum). Default is `USER`.
 - Client singleton: `src/lib/db.ts` — import `{ prisma }` from here
 - Seed: `prisma/seed.ts` — demo users (superadmin, admin, user) with `Bun.password.hash` bcrypt
 - Commands: `bun run db:migrate`, `bun run db:seed`, `bun run db:generate`
 
+## Redis
+
+Bun native `Bun.RedisClient` — no external package needed.
+
+- Client singleton: `src/lib/redis.ts` — connects to `REDIS_URL`
+- App logs: stored as Redis List (`app:logs`), max 500 entries via `LTRIM`, persists across restart
+- App log module: `src/lib/applog.ts` — `appLog(level, message, detail?)`, `getAppLogs(options?)`, `clearAppLogs()`
+
 ## Auth
 
 Session-based auth with HttpOnly cookies stored in DB.
 
-- Login: `POST /api/auth/login` — finds user by email, verifies password with `Bun.password.verify`, checks blocked status, creates Session record
+- Login: `POST /api/auth/login` — finds user by email, verifies password with `Bun.password.verify`, checks blocked status, creates Session record. Logs to audit trail.
 - Google OAuth: `GET /api/auth/google` → Google → `GET /api/auth/callback/google` — upserts user, creates session
 - Session: `GET /api/auth/session` — looks up session by cookie token, returns user (including role & blocked) or 401, auto-deletes expired
 - Logout: `POST /api/auth/logout` — deletes session from DB, clears cookie
@@ -40,6 +48,22 @@ Session-based auth with HttpOnly cookies stored in DB.
 - `GET /api/admin/users` — list all users with role, blocked status, createdAt
 - `PUT /api/admin/users/:id/role` — change role to USER or ADMIN (cannot change self or to SUPER_ADMIN)
 - `PUT /api/admin/users/:id/block` — block/unblock user (deletes all sessions on block)
+- `GET /api/admin/presence` — list online user IDs
+- `GET /api/admin/logs/app` — app logs from Redis (filter: level, limit, afterId)
+- `GET /api/admin/logs/audit` — audit logs from DB (filter: userId, action, limit)
+- `DELETE /api/admin/logs/app` — clear all app logs from Redis
+- `DELETE /api/admin/logs/audit` — clear all audit logs from DB
+
+## WebSocket
+
+- `WS /ws/presence` — real-time user presence. Authenticates via session cookie. Tracks connections in-memory (`src/lib/presence.ts`). Broadcasts online user list to admin subscribers on connect/disconnect.
+
+## Logging
+
+Two log systems:
+
+- **App Logs** (`src/lib/applog.ts`) — Redis-backed ring buffer (500 entries). Logs API requests (via `onAfterResponse` hook), errors, auth events. Auto-rotates via `LTRIM`. Can be cleared manually.
+- **Audit Logs** (DB `AuditLog` table) — Persistent user activity trail. Actions: `LOGIN`, `LOGOUT`, `LOGIN_FAILED`, `LOGIN_BLOCKED`, `ROLE_CHANGED`, `BLOCKED`, `UNBLOCKED`. Auto-cleanup of records older than `AUDIT_LOG_RETENTION_DAYS` (default 90) runs on startup + every 24h. Can be cleared manually.
 
 ## Role-Based Routing
 
@@ -51,24 +75,26 @@ Session-based auth with HttpOnly cookies stored in DB.
 
 - `getDefaultRoute(role)` in `src/frontend/hooks/useAuth.ts` — centralized redirect logic
 - Blocked users are redirected to `/blocked` from all protected routes
+- Tab state persisted in URL search params (`?tab=`) for `/dev` and `/dashboard`
 
 ## Frontend
 
 React 19 + Vite 8 (middleware mode in dev). File-based routing with TanStack Router.
 
 - Entry: `src/frontend.tsx` — renders App, removes splash screen, DevInspector in dev
-- App: `src/frontend/App.tsx` — MantineProvider (dark, forced), QueryClientProvider, RouterProvider
+- App: `src/frontend/App.tsx` — MantineProvider (auto color scheme), QueryClientProvider, RouterProvider
 - Routes: `src/frontend/routes/`
-  - `__root.tsx` — Root layout
+  - `__root.tsx` — Root layout with dark/light mode toggle (fixed top-right)
   - `index.tsx` — Landing page
   - `login.tsx` — Login page (email/password + Google OAuth)
-  - `dev.tsx` — Dev console with AppShell sidebar, user management (SUPER_ADMIN only)
-  - `dashboard.tsx` — Admin dashboard with AppShell sidebar, stats, analytics, orders (ADMIN+)
+  - `dev.tsx` — Dev console with AppShell sidebar: Overview, Users, App Logs, User Logs, Database, Settings (SUPER_ADMIN only)
+  - `dashboard.tsx` — Admin dashboard with AppShell sidebar: Dashboard, Analytics, Orders, Messages, Calendar, Settings (ADMIN+)
   - `profile.tsx` — User profile (all authenticated users)
   - `blocked.tsx` — Blocked user page with explanation
 - Auth hooks: `src/frontend/hooks/useAuth.ts` — `useSession()`, `useLogin()`, `useLogout()`, `getDefaultRoute()`
-- UI: Mantine v8 (dark theme `#242424`), react-icons, AppShell layout for dashboard pages
-- Splash: `index.html` has inline dark CSS + spinner, removed on React mount
+- Presence hook: `src/frontend/hooks/usePresence.ts` — WebSocket auto-connect, exposes `onlineUserIds`
+- UI: Mantine v8 (dark/light, auto default from device), react-icons, AppShell layout for dashboard pages
+- Color scheme: `index.html` reads `localStorage` before first paint to prevent flash. Toggle persisted by Mantine in `localStorage`.
 
 ## Dev Tools
 
@@ -94,6 +120,7 @@ bun run test:e2e          # tests/e2e/ — browser tests via Lightpanda CDP
 ## APIs
 
 - `Bun.password.hash()` / `Bun.password.verify()` for bcrypt
+- `Bun.RedisClient` for Redis (native, no package)
 - `Bun.file()` for static file serving in production
 - `Bun.which()` / `Bun.spawn()` for editor integration
 - `crypto.randomUUID()` for session tokens
