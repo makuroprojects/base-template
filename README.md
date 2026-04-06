@@ -103,7 +103,7 @@ src/
       __root.tsx     # Root layout with dark/light mode toggle
       index.tsx      # Landing page
       login.tsx      # Login page (email/password + Google OAuth)
-      dev.tsx        # Dev console — SUPER_ADMIN only (users, app logs, user logs)
+      dev.tsx        # Dev console — SUPER_ADMIN only (users, app logs, user logs, DB schema)
       dashboard.tsx  # Admin dashboard — ADMIN & SUPER_ADMIN (stats, analytics, orders)
       profile.tsx    # User profile — all authenticated users
       blocked.tsx    # Blocked user info page
@@ -163,6 +163,13 @@ SUPER_ADMIN-only endpoints:
 | `GET` | `/api/admin/logs/audit` | Audit logs (filter: userId, action, limit) |
 | `DELETE` | `/api/admin/logs/app` | Clear all app logs |
 | `DELETE` | `/api/admin/logs/audit` | Clear all audit logs |
+| `GET` | `/api/admin/routes` | All routes metadata (method, path, auth, category) |
+| `GET` | `/api/admin/project-structure` | Project files, imports, exports, line counts |
+| `GET` | `/api/admin/env-map` | Environment variables map (status, usage, categories) |
+| `GET` | `/api/admin/test-coverage` | Test coverage mapping (source → test files) |
+| `GET` | `/api/admin/dependencies` | NPM packages graph (version, type, usage) |
+| `GET` | `/api/admin/migrations` | Prisma migration timeline (changes, SQL preview) |
+| `GET` | `/api/admin/sessions` | Active sessions with online status |
 
 ## WebSocket
 
@@ -178,6 +185,44 @@ SUPER_ADMIN-only endpoints:
 | **Audit Logs** | PostgreSQL | Auto-cleanup > 90 days | LOGIN, LOGOUT, LOGIN_FAILED, ROLE_CHANGED, BLOCKED, etc. |
 
 Both can be viewed and manually cleared from the Dev Console (`/dev`).
+
+## Database Schema Visualization
+
+The Dev Console (`/dev` → Database tab) includes an interactive ER diagram powered by React Flow (`@xyflow/react`):
+
+- Visual representation of all Prisma models, fields, enums, and relations
+- Drag nodes to rearrange the layout
+- Auto-save: node positions, zoom level, and pan position are persisted to `localStorage` and restored on reload
+- Relation edges show field mappings and delete rules
+
+## Project Structure Visualization
+
+The Dev Console (`/dev` → Project tab) provides 4 interactive views:
+
+| View | Description |
+|------|-------------|
+| **API Routes** | All endpoints (HTTP + WS + frontend pages) with method badges, auth levels, and flow edges showing login→redirect paths |
+| **File Structure** | Project files as nodes with import dependency edges. Filter by category (Frontend/Backend/Lib/Tests). Shows line counts and export counts |
+| **User Flow** | Navigation map showing role-based routing: login → auth check → blocked check → role check → destination page |
+| **Data Flow** | Request lifecycle: client → server → auth → handler → DB/Redis → response. Includes WebSocket and audit logging flows |
+
+All views use React Flow with auto-save positions and viewport per view.
+
+### DevOps Views
+
+| View | Description |
+|------|-------------|
+| **Env Variables** | All environment variables with set/unset status, required/optional badges, edges to consuming files |
+| **Test Coverage** | Source files (color-coded: green/yellow/red) with edges to test files. Filter by coverage status |
+| **Dependencies** | NPM packages grouped by category, edges to importing files. Filter runtime/dev |
+| **Migrations** | Horizontal timeline of Prisma migrations with SQL preview and change summaries |
+
+### Live Views
+
+| View | Description |
+|------|-------------|
+| **Sessions** | Active user sessions with online status, role mapping, auto-refresh 10s |
+| **Live Requests** | Real-time API request visualization via WebSocket. Hit counters, status colors, response times |
 
 ## Dark/Light Mode
 

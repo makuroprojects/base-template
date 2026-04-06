@@ -28,6 +28,7 @@
     "@prisma/client": "6",
     "@tanstack/react-query": "^5.95.2",
     "@tanstack/react-router": "^1.168.10",
+    "@xyflow/react": "^12.10.2",
     "elysia": "^1.4.28",
     "postcss": "^8.5.8",
     "postcss-preset-mantine": "^1.18.0",

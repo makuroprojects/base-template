@@ -53,6 +53,13 @@ Session-based auth with HttpOnly cookies stored in DB.
 - `GET /api/admin/logs/audit` — audit logs from DB (filter: userId, action, limit)
 - `DELETE /api/admin/logs/app` — clear all app logs from Redis
 - `DELETE /api/admin/logs/audit` — clear all audit logs from DB
+- `GET /api/admin/routes` — all routes metadata (method, path, auth level, category, description) with summary stats
+- `GET /api/admin/project-structure` — scans `src/`, `prisma/`, `tests/` — returns files with line counts, exports, imports, categories + directory tree
+- `GET /api/admin/env-map` — environment variables with set/unset status, required/optional, default values, consuming files
+- `GET /api/admin/test-coverage` — source files + test files mapping, coverage status (covered/partial/uncovered)
+- `GET /api/admin/dependencies` — NPM packages from package.json with version, type (runtime/dev), category, importing files
+- `GET /api/admin/migrations` — Prisma migration timeline with parsed SQL changes and date info
+- `GET /api/admin/sessions` — all active sessions with user info, online status, expiry, role breakdown
 
 ## WebSocket
 
@@ -87,7 +94,7 @@ React 19 + Vite 8 (middleware mode in dev). File-based routing with TanStack Rou
   - `__root.tsx` — Root layout with dark/light mode toggle (fixed top-right)
   - `index.tsx` — Landing page
   - `login.tsx` — Login page (email/password + Google OAuth)
-  - `dev.tsx` — Dev console with AppShell sidebar: Overview, Users, App Logs, User Logs, Database, Settings (SUPER_ADMIN only)
+  - `dev.tsx` — Dev console with AppShell sidebar: Overview, Users, App Logs, User Logs, Database (React Flow ER diagram), Project (4 sub-views: API Routes, File Structure, User Flow, Data Flow — all React Flow with auto-save), Settings (SUPER_ADMIN only)
   - `dashboard.tsx` — Admin dashboard with AppShell sidebar: Dashboard, Analytics, Orders, Messages, Calendar, Settings (ADMIN+)
   - `profile.tsx` — User profile (all authenticated users)
   - `blocked.tsx` — Blocked user page with explanation
@@ -95,6 +102,34 @@ React 19 + Vite 8 (middleware mode in dev). File-based routing with TanStack Rou
 - Presence hook: `src/frontend/hooks/usePresence.ts` — WebSocket auto-connect, exposes `onlineUserIds`
 - UI: Mantine v8 (dark/light, auto default from device), react-icons, AppShell layout for dashboard pages
 - Color scheme: `index.html` reads `localStorage` before first paint to prevent flash. Toggle persisted by Mantine in `localStorage`.
+
+## Database Schema Visualization
+
+- Dev Console Database tab renders an interactive ER diagram using `@xyflow/react` (React Flow)
+- `GET /api/admin/schema` parses `prisma/schema.prisma` into models/fields/relations/enums JSON via `parseSchema()` in `src/app.ts`
+- Custom node types: `ModelNode` (table fields with types/attributes) and `EnumNode` (enum values)
+- Auto-save to `localStorage`: node positions (`dev:schema:positions`) and viewport/zoom (`dev:schema:viewport`) — debounced 500ms
+- On reload, restores last positions and viewport. Falls back to grid layout + fitView if no saved state.
+
+## Project Structure Visualization
+
+- Dev Console Project tab — 10 sub-views switchable via grouped Select dropdown:
+  - **Architecture group:**
+    - **API Routes**: `GET /api/admin/routes` — all HTTP + WS + frontend routes with method/auth/category badges. Edges show login→redirect flow.
+    - **File Structure**: `GET /api/admin/project-structure` — file nodes with import dependency edges. Filter by category. Double-click opens file in editor.
+    - **User Flow**: Static — role-based navigation: landing → login → auth → blocked check → role check → destination.
+    - **Data Flow**: Static — request lifecycle: client → Elysia → auth → handler → DB/Redis → response. WS + audit flows.
+  - **DevOps group:**
+    - **Env Variables**: `GET /api/admin/env-map` — env vars with set/unset status, required/optional badges, edges to consuming files.
+    - **Test Coverage**: `GET /api/admin/test-coverage` — source files (green/yellow/red coverage) with edges to test files. Filter by coverage status.
+    - **Dependencies**: `GET /api/admin/dependencies` — NPM packages by category/type with edges to importing files.
+    - **Migrations**: `GET /api/admin/migrations` — horizontal timeline of Prisma migrations with SQL preview and change type badges.
+  - **Live group:**
+    - **Sessions**: `GET /api/admin/sessions` — active user sessions with online indicator, role mapping. Auto-refresh 10s.
+    - **Live Requests**: Real-time API requests via WS broadcast. Hit counters, status color glow, avg response time. Pause/clear controls.
+- Each sub-view has independent auto-save (positions + viewport) via `useFlowAutoSave(key)` hook
+- All dynamic views have reload buttons. File nodes support double-click to open in editor.
+- Request broadcast: `onAfterResponse` hook sends `{ type: 'request', method, path, status, duration }` to admin WS subscribers via `broadcastToAdmins()` in `src/lib/presence.ts`
 
 ## Dev Tools
 

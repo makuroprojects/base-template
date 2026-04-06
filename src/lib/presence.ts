@@ -40,6 +40,13 @@ export function addConnection(ws: ServerWebSocket<{ userId: string }>, userId: s
   broadcast()
 }
 
+export function broadcastToAdmins(message: object) {
+  const msg = JSON.stringify(message)
+  for (const ws of adminSubs) {
+    ws.send(msg)
+  }
+}
+
 export function removeConnection(ws: ServerWebSocket<{ userId: string }>) {
   const userId = ws.data.userId
   const set = connections.get(userId)
