@@ -1,5 +1,6 @@
 import { ColorSchemeScript, MantineProvider, createTheme } from '@mantine/core'
 import '@mantine/core/styles.css'
+import { ModalsProvider } from '@mantine/modals'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createRouter, RouterProvider } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
@@ -31,9 +32,11 @@ export function App() {
     <>
       <ColorSchemeScript defaultColorScheme="auto" />
       <MantineProvider theme={theme} defaultColorScheme="auto">
-        <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} />
-        </QueryClientProvider>
+        <ModalsProvider>
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router} />
+          </QueryClientProvider>
+        </ModalsProvider>
       </MantineProvider>
     </>
   )

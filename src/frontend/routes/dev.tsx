@@ -63,6 +63,7 @@ import {
   TbUsers,
   TbWifi,
 } from 'react-icons/tb'
+import { modals } from '@mantine/modals'
 import { useLogout, useSession, type Role } from '@/frontend/hooks/useAuth'
 import { usePresence } from '@/frontend/hooks/usePresence'
 
@@ -123,85 +124,132 @@ function DevPage() {
       return next
     })
   }
+  const confirmLogout = () =>
+    modals.openConfirmModal({
+      title: 'Logout',
+      children: <Text size="sm">Are you sure you want to logout?</Text>,
+      labels: { confirm: 'Logout', cancel: 'Cancel' },
+      confirmProps: { color: 'red' },
+      onConfirm: () => logout.mutate(),
+    })
 
   return (
     <AppShell
-      navbar={{ width: 260, breakpoint: 'sm', collapsed: { desktop: collapsed } }}
+      navbar={{ width: collapsed ? 60 : 260, breakpoint: 'sm' }}
       padding="md"
     >
-      <AppShell.Navbar p="md">
+      <AppShell.Navbar p={collapsed ? 'xs' : 'md'}>
         <AppShell.Section>
-          <Group gap="xs" mb="md" justify="space-between">
-            <Group gap="xs">
-              <ThemeIcon size="lg" variant="gradient" gradient={{ from: 'red', to: 'orange' }}>
-                <TbCode size={18} />
-              </ThemeIcon>
-              <div>
-                <Text fw={700} size="sm">Dev Console</Text>
-                <Text size="xs" c="dimmed">Super Admin</Text>
-              </div>
-            </Group>
-            <Tooltip label="Hide sidebar">
-              <ActionIcon variant="subtle" color="gray" size="sm" onClick={toggleSidebar}>
-                <TbLayoutSidebarLeftCollapse size={18} />
-              </ActionIcon>
-            </Tooltip>
+          <Group gap="xs" mb="md" justify={collapsed ? 'center' : 'space-between'}>
+            {collapsed ? (
+              <Tooltip label="Expand sidebar" position="right">
+                <ActionIcon variant="subtle" color="gray" size="lg" onClick={toggleSidebar}>
+                  <TbLayoutSidebarLeftExpand size={18} />
+                </ActionIcon>
+              </Tooltip>
+            ) : (
+              <>
+                <Group gap="xs">
+                  <ThemeIcon size="lg" variant="gradient" gradient={{ from: 'red', to: 'orange' }}>
+                    <TbCode size={18} />
+                  </ThemeIcon>
+                  <div>
+                    <Text fw={700} size="sm">Dev Console</Text>
+                    <Text size="xs" c="dimmed">Super Admin</Text>
+                  </div>
+                </Group>
+                <Tooltip label="Minimize sidebar">
+                  <ActionIcon variant="subtle" color="gray" size="sm" onClick={toggleSidebar}>
+                    <TbLayoutSidebarLeftCollapse size={18} />
+                  </ActionIcon>
+                </Tooltip>
+              </>
+            )}
           </Group>
         </AppShell.Section>
 
         <AppShell.Section grow>
-          {navItems.map((item) => (
-            <NavLink
-              key={item.key}
-              label={item.label}
-              leftSection={<item.icon size={18} />}
-              rightSection={<TbChevronRight size={14} />}
-              active={active === item.key}
-              onClick={() => setActive(item.key)}
-              variant="light"
-              mb={4}
-            />
-          ))}
+          {navItems.map((item) =>
+            collapsed ? (
+              <Tooltip key={item.key} label={item.label} position="right">
+                <ActionIcon
+                  variant={active === item.key ? 'light' : 'subtle'}
+                  color={active === item.key ? 'blue' : 'gray'}
+                  size="lg"
+                  onClick={() => setActive(item.key)}
+                  mb={4}
+                  style={{ width: '100%' }}
+                >
+                  <item.icon size={18} />
+                </ActionIcon>
+              </Tooltip>
+            ) : (
+              <NavLink
+                key={item.key}
+                label={item.label}
+                leftSection={<item.icon size={18} />}
+                rightSection={<TbChevronRight size={14} />}
+                active={active === item.key}
+                onClick={() => setActive(item.key)}
+                variant="light"
+                mb={4}
+              />
+            )
+          )}
         </AppShell.Section>
 
         <AppShell.Section>
           <Box
-            p="sm"
+            p={collapsed ? 'xs' : 'sm'}
             style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}
           >
-            <Group justify="space-between">
-              <Group gap="xs">
-                <Avatar color="red" radius="xl" size="sm">
-                  {user?.name?.charAt(0).toUpperCase()}
-                </Avatar>
-                <div>
-                  <Text size="xs" fw={500}>{user?.name}</Text>
-                  <Text size="xs" c="dimmed">{user?.email}</Text>
-                </div>
+            {collapsed ? (
+              <Stack align="center" gap={4}>
+                <Tooltip label={user?.name} position="right">
+                  <Avatar color="red" radius="xl" size="sm">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </Avatar>
+                </Tooltip>
+                <Tooltip label="Logout" position="right">
+                  <ActionIcon
+                    variant="subtle"
+                    color="red"
+                    size="sm"
+                    onClick={confirmLogout}
+                    loading={logout.isPending}
+                  >
+                    <TbLogout size={14} />
+                  </ActionIcon>
+                </Tooltip>
+              </Stack>
+            ) : (
+              <Group justify="space-between">
+                <Group gap="xs">
+                  <Avatar color="red" radius="xl" size="sm">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <div>
+                    <Text size="xs" fw={500}>{user?.name}</Text>
+                    <Text size="xs" c="dimmed">{user?.email}</Text>
+                  </div>
+                </Group>
+                <Tooltip label="Logout">
+                  <ActionIcon
+                    variant="subtle"
+                    color="red"
+                    onClick={confirmLogout}
+                    loading={logout.isPending}
+                  >
+                    <TbLogout size={16} />
+                  </ActionIcon>
+                </Tooltip>
               </Group>
-              <Tooltip label="Logout">
-                <ActionIcon
-                  variant="subtle"
-                  color="red"
-                  onClick={() => logout.mutate()}
-                  loading={logout.isPending}
-                >
-                  <TbLogout size={16} />
-                </ActionIcon>
-              </Tooltip>
-            </Group>
+            )}
           </Box>
         </AppShell.Section>
       </AppShell.Navbar>
 
       <AppShell.Main>
-        {collapsed && (
-          <Tooltip label="Show sidebar" position="right">
-            <ActionIcon variant="subtle" color="gray" size="sm" onClick={toggleSidebar} style={{ position: 'fixed', top: 12, left: 12, zIndex: 100 }}>
-              <TbLayoutSidebarLeftExpand size={18} />
-            </ActionIcon>
-          </Tooltip>
-        )}
         {active === 'overview' && <OverviewPanel />}
         {active === 'users' && <UsersPanel />}
         {active === 'app-logs' && <AppLogsPanel />}

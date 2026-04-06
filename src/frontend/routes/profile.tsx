@@ -11,6 +11,7 @@ import {
 } from '@mantine/core'
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { TbLogout, TbUser } from 'react-icons/tb'
+import { modals } from '@mantine/modals'
 import { useLogout, useSession } from '@/frontend/hooks/useAuth'
 
 export const Route = createFileRoute('/profile')({
@@ -61,7 +62,13 @@ function ProfilePage() {
               variant="light"
               color="red"
               leftSection={<TbLogout size={16} />}
-              onClick={() => logout.mutate()}
+              onClick={() => modals.openConfirmModal({
+                title: 'Logout',
+                children: <Text size="sm">Are you sure you want to logout?</Text>,
+                labels: { confirm: 'Logout', cancel: 'Cancel' },
+                confirmProps: { color: 'red' },
+                onConfirm: () => logout.mutate(),
+              })}
               loading={logout.isPending}
             >
               Logout
