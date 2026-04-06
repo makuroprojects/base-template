@@ -30,6 +30,8 @@ import {
   TbChevronRight,
   TbClipboardList,
   TbCode,
+  TbLayoutSidebarLeftCollapse,
+  TbLayoutSidebarLeftExpand,
   TbCoin,
   TbLayoutDashboard,
   TbLogout,
@@ -39,6 +41,7 @@ import {
   TbUser,
   TbUsers,
 } from 'react-icons/tb'
+import { useState } from 'react'
 import { useLogout, useSession } from '@/frontend/hooks/useAuth'
 
 const validTabs = ['dashboard', 'analytics', 'orders', 'messages', 'calendar', 'settings'] as const
@@ -80,22 +83,37 @@ function DashboardPage() {
   const { tab: active } = Route.useSearch()
   const navigate = useNavigate()
   const setActive = (key: string) => navigate({ to: '/dashboard', search: { tab: key } })
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('dashboard:sidebar') === 'collapsed')
+  const toggleSidebar = () => {
+    setCollapsed(prev => {
+      const next = !prev
+      localStorage.setItem('dashboard:sidebar', next ? 'collapsed' : 'open')
+      return next
+    })
+  }
 
   return (
     <AppShell
-      navbar={{ width: 260, breakpoint: 'sm' }}
+      navbar={{ width: 260, breakpoint: 'sm', collapsed: { desktop: collapsed } }}
       padding="md"
     >
       <AppShell.Navbar p="md">
         <AppShell.Section>
-          <Group gap="xs" mb="md">
-            <ThemeIcon size="lg" variant="gradient" gradient={{ from: 'blue', to: 'cyan' }}>
-              <TbLayoutDashboard size={18} />
-            </ThemeIcon>
-            <div>
-              <Text fw={700} size="sm">Dashboard</Text>
-              <Text size="xs" c="dimmed">Admin Panel</Text>
-            </div>
+          <Group gap="xs" mb="md" justify="space-between">
+            <Group gap="xs">
+              <ThemeIcon size="lg" variant="gradient" gradient={{ from: 'blue', to: 'cyan' }}>
+                <TbLayoutDashboard size={18} />
+              </ThemeIcon>
+              <div>
+                <Text fw={700} size="sm">Dashboard</Text>
+                <Text size="xs" c="dimmed">Admin Panel</Text>
+              </div>
+            </Group>
+            <Tooltip label="Hide sidebar">
+              <ActionIcon variant="subtle" color="gray" size="sm" onClick={toggleSidebar}>
+                <TbLayoutSidebarLeftCollapse size={18} />
+              </ActionIcon>
+            </Tooltip>
           </Group>
         </AppShell.Section>
 
@@ -168,6 +186,13 @@ function DashboardPage() {
       </AppShell.Navbar>
 
       <AppShell.Main>
+        {collapsed && (
+          <Tooltip label="Show sidebar" position="right">
+            <ActionIcon variant="subtle" color="gray" size="sm" onClick={toggleSidebar} style={{ position: 'fixed', top: 12, left: 12, zIndex: 100 }}>
+              <TbLayoutSidebarLeftExpand size={18} />
+            </ActionIcon>
+          </Tooltip>
+        )}
         {active === 'dashboard' && <OverviewPanel />}
         {active === 'analytics' && <AnalyticsPanel />}
         {active === 'orders' && <OrdersPanel />}

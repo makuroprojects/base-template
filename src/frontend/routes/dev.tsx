@@ -48,6 +48,8 @@ import {
   TbLock,
   TbLockOpen,
   TbArrowRight,
+  TbLayoutSidebarLeftCollapse,
+  TbLayoutSidebarLeftExpand,
   TbLogout,
   TbRefresh,
   TbServer,
@@ -113,22 +115,37 @@ function DevPage() {
   const { tab: active } = Route.useSearch()
   const navigate = useNavigate()
   const setActive = (key: string) => navigate({ to: '/dev', search: { tab: key } })
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('dev:sidebar') === 'collapsed')
+  const toggleSidebar = () => {
+    setCollapsed(prev => {
+      const next = !prev
+      localStorage.setItem('dev:sidebar', next ? 'collapsed' : 'open')
+      return next
+    })
+  }
 
   return (
     <AppShell
-      navbar={{ width: 260, breakpoint: 'sm' }}
+      navbar={{ width: 260, breakpoint: 'sm', collapsed: { desktop: collapsed } }}
       padding="md"
     >
       <AppShell.Navbar p="md">
         <AppShell.Section>
-          <Group gap="xs" mb="md">
-            <ThemeIcon size="lg" variant="gradient" gradient={{ from: 'red', to: 'orange' }}>
-              <TbCode size={18} />
-            </ThemeIcon>
-            <div>
-              <Text fw={700} size="sm">Dev Console</Text>
-              <Text size="xs" c="dimmed">Super Admin</Text>
-            </div>
+          <Group gap="xs" mb="md" justify="space-between">
+            <Group gap="xs">
+              <ThemeIcon size="lg" variant="gradient" gradient={{ from: 'red', to: 'orange' }}>
+                <TbCode size={18} />
+              </ThemeIcon>
+              <div>
+                <Text fw={700} size="sm">Dev Console</Text>
+                <Text size="xs" c="dimmed">Super Admin</Text>
+              </div>
+            </Group>
+            <Tooltip label="Hide sidebar">
+              <ActionIcon variant="subtle" color="gray" size="sm" onClick={toggleSidebar}>
+                <TbLayoutSidebarLeftCollapse size={18} />
+              </ActionIcon>
+            </Tooltip>
           </Group>
         </AppShell.Section>
 
@@ -178,6 +195,13 @@ function DevPage() {
       </AppShell.Navbar>
 
       <AppShell.Main>
+        {collapsed && (
+          <Tooltip label="Show sidebar" position="right">
+            <ActionIcon variant="subtle" color="gray" size="sm" onClick={toggleSidebar} style={{ position: 'fixed', top: 12, left: 12, zIndex: 100 }}>
+              <TbLayoutSidebarLeftExpand size={18} />
+            </ActionIcon>
+          </Tooltip>
+        )}
         {active === 'overview' && <OverviewPanel />}
         {active === 'users' && <UsersPanel />}
         {active === 'app-logs' && <AppLogsPanel />}
