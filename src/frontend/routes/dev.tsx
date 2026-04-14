@@ -4,6 +4,7 @@ import {
   Avatar,
   Badge,
   Box,
+  Burger,
   Card,
   Container,
   Group,
@@ -19,6 +20,7 @@ import {
   Title,
   Tooltip,
 } from '@mantine/core'
+import { useDisclosure, useMediaQuery } from '@mantine/hooks'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -48,6 +50,7 @@ import {
   TbLock,
   TbLockOpen,
   TbArrowRight,
+  TbBug,
   TbLayoutSidebarLeftCollapse,
   TbLayoutSidebarLeftExpand,
   TbLogout,
@@ -67,8 +70,9 @@ import { modals } from '@mantine/modals'
 import { useLogout, useSession, type Role } from '@/frontend/hooks/useAuth'
 import { usePresence } from '@/frontend/hooks/usePresence'
 import { ThemeToggle } from '@/frontend/components/ThemeToggle'
+import { TicketsPanel } from '@/frontend/components/TicketsPanel'
 
-const validTabs = ['overview', 'users', 'app-logs', 'user-logs', 'database', 'project', 'settings'] as const
+const validTabs = ['overview', 'users', 'tickets', 'app-logs', 'user-logs', 'database', 'project', 'settings'] as const
 
 export const Route = createFileRoute('/dev')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -103,6 +107,7 @@ interface AdminUser {
 const navItems = [
   { label: 'Overview', icon: TbLayoutDashboard, key: 'overview' },
   { label: 'Users', icon: TbUsers, key: 'users' },
+  { label: 'Tickets', icon: TbBug, key: 'tickets' },
   { label: 'App Logs', icon: TbServer, key: 'app-logs' },
   { label: 'User Logs', icon: TbUserSearch, key: 'user-logs' },
   { label: 'Database', icon: TbDatabase, key: 'database' },
@@ -116,7 +121,12 @@ function DevPage() {
   const user = data?.user
   const { tab: active } = Route.useSearch()
   const navigate = useNavigate()
-  const setActive = (key: string) => navigate({ to: '/dev', search: { tab: key } })
+  const [mobileOpened, { toggle: toggleMobile, close: closeMobile }] = useDisclosure(false)
+  const isMobile = useMediaQuery('(max-width: 48em)')
+  const setActive = (key: string) => {
+    navigate({ to: '/dev', search: { tab: key } })
+    closeMobile()
+  }
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('dev:sidebar') === 'collapsed')
   const toggleSidebar = () => {
     setCollapsed(prev => {
@@ -136,9 +146,25 @@ function DevPage() {
 
   return (
     <AppShell
-      navbar={{ width: collapsed ? 60 : 260, breakpoint: 'sm' }}
+      header={{ height: 56, collapsed: !isMobile }}
+      navbar={{
+        width: collapsed ? 60 : 260,
+        breakpoint: 'sm',
+        collapsed: { mobile: !mobileOpened },
+      }}
       padding="md"
     >
+      <AppShell.Header px="md" hiddenFrom="sm">
+        <Group h="100%" justify="space-between">
+          <Group gap="xs">
+            <Burger opened={mobileOpened} onClick={toggleMobile} size="sm" />
+            <ThemeIcon size="md" variant="gradient" gradient={{ from: 'red', to: 'orange' }}>
+              <TbCode size={16} />
+            </ThemeIcon>
+            <Text fw={700} size="sm">Dev Console</Text>
+          </Group>
+        </Group>
+      </AppShell.Header>
       <AppShell.Navbar p={collapsed ? 'xs' : 'md'}>
         <AppShell.Section>
           <Group gap="xs" mb="md" justify={collapsed ? 'center' : 'space-between'}>
@@ -257,6 +283,7 @@ function DevPage() {
       <AppShell.Main>
         {active === 'overview' && <OverviewPanel />}
         {active === 'users' && <UsersPanel />}
+        {active === 'tickets' && <TicketsPanel />}
         {active === 'app-logs' && <AppLogsPanel />}
         {active === 'user-logs' && <UserLogsPanel />}
         {active === 'database' && <DatabasePanel />}
@@ -441,20 +468,28 @@ function UsersPanel() {
                           </Menu.Target>
                           <Menu.Dropdown>
                             <Menu.Label>Role</Menu.Label>
+                            {u.role !== 'USER' && (
+                              <Menu.Item
+                                leftSection={<TbShieldOff size={14} />}
+                                onClick={() => changeRole.mutate({ id: u.id, role: 'USER' })}
+                              >
+                                Set as User
+                              </Menu.Item>
+                            )}
+                            {u.role !== 'QC' && (
+                              <Menu.Item
+                                leftSection={<TbBug size={14} />}
+                                onClick={() => changeRole.mutate({ id: u.id, role: 'QC' })}
+                              >
+                                Set as QC
+                              </Menu.Item>
+                            )}
                             {u.role !== 'ADMIN' && (
                               <Menu.Item
                                 leftSection={<TbShieldCheck size={14} />}
                                 onClick={() => changeRole.mutate({ id: u.id, role: 'ADMIN' })}
                               >
-                                Angkat jadi Admin
-                              </Menu.Item>
-                            )}
-                            {u.role === 'ADMIN' && (
-                              <Menu.Item
-                                leftSection={<TbShieldOff size={14} />}
-                                onClick={() => changeRole.mutate({ id: u.id, role: 'USER' })}
-                              >
-                                Turunkan ke User
+                                Set as Admin
                               </Menu.Item>
                             )}
 
@@ -1150,7 +1185,7 @@ const AUTH_COLORS: Record<string, string> = {
 const CATEGORY_COLORS: Record<string, string> = {
   frontend: 'blue', route: 'blue', auth: 'cyan', admin: 'red', utility: 'gray', realtime: 'violet',
   backend: 'green', lib: 'violet', hook: 'teal', component: 'indigo', prisma: 'orange',
-  'test-unit': 'yellow', 'test-integration': 'yellow', 'test-e2e': 'yellow', test: 'yellow', config: 'gray',
+  'test-unit': 'yellow', 'test-integration': 'yellow', test: 'yellow', config: 'gray',
 }
 
 // ─── Route Node ───────────────────────────────

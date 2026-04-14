@@ -4,6 +4,7 @@ import {
   Avatar,
   Badge,
   Box,
+  Burger,
   Card,
   Container,
   Group,
@@ -19,6 +20,7 @@ import {
   Title,
   Tooltip,
 } from '@mantine/core'
+import { useDisclosure, useMediaQuery } from '@mantine/hooks'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import {
   TbActivity,
@@ -38,6 +40,7 @@ import {
   TbMessages,
   TbReportAnalytics,
   TbSettings,
+  TbBug,
   TbUser,
   TbUsers,
 } from 'react-icons/tb'
@@ -45,8 +48,9 @@ import { useState } from 'react'
 import { modals } from '@mantine/modals'
 import { useLogout, useSession } from '@/frontend/hooks/useAuth'
 import { ThemeToggle } from '@/frontend/components/ThemeToggle'
+import { TicketsPanel } from '@/frontend/components/TicketsPanel'
 
-const validTabs = ['dashboard', 'analytics', 'orders', 'messages', 'calendar', 'settings'] as const
+const validTabs = ['dashboard', 'tickets', 'analytics', 'orders', 'messages', 'calendar', 'settings'] as const
 
 export const Route = createFileRoute('/dashboard')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -61,6 +65,10 @@ export const Route = createFileRoute('/dashboard')({
       if (!data?.user) throw redirect({ to: '/login' })
       if (data.user.blocked) throw redirect({ to: '/blocked' })
       if (data.user.role === 'USER') throw redirect({ to: '/profile' })
+      const search = window.location.search
+      if (data.user.role === 'QC' && !search.includes('tab=')) {
+        throw redirect({ to: '/dashboard', search: { tab: 'tickets' } })
+      }
     } catch (e) {
       if (e instanceof Error) throw redirect({ to: '/login' })
       throw e
@@ -69,13 +77,16 @@ export const Route = createFileRoute('/dashboard')({
   component: DashboardPage,
 })
 
-const navItems = [
-  { label: 'Dashboard', icon: TbLayoutDashboard, key: 'dashboard' },
-  { label: 'Analytics', icon: TbReportAnalytics, key: 'analytics' },
-  { label: 'Orders', icon: TbClipboardList, key: 'orders' },
-  { label: 'Messages', icon: TbMessages, key: 'messages', badge: 3 },
-  { label: 'Calendar', icon: TbCalendar, key: 'calendar' },
-  { label: 'Settings', icon: TbSettings, key: 'settings' },
+type NavItem = { label: string; icon: typeof TbLayoutDashboard; key: string; badge?: number; qcOnly?: boolean; adminOnly?: boolean }
+
+const navItemsAll: NavItem[] = [
+  { label: 'Dashboard', icon: TbLayoutDashboard, key: 'dashboard', adminOnly: true },
+  { label: 'Tickets', icon: TbBug, key: 'tickets' },
+  { label: 'Analytics', icon: TbReportAnalytics, key: 'analytics', adminOnly: true },
+  { label: 'Orders', icon: TbClipboardList, key: 'orders', adminOnly: true },
+  { label: 'Messages', icon: TbMessages, key: 'messages', badge: 3, adminOnly: true },
+  { label: 'Calendar', icon: TbCalendar, key: 'calendar', adminOnly: true },
+  { label: 'Settings', icon: TbSettings, key: 'settings', adminOnly: true },
 ]
 
 function DashboardPage() {
@@ -83,8 +94,15 @@ function DashboardPage() {
   const logout = useLogout()
   const user = data?.user
   const { tab: active } = Route.useSearch()
+  const isQcOnly = user?.role === 'QC'
+  const navItems = navItemsAll.filter(item => isQcOnly ? !item.adminOnly : true)
   const navigate = useNavigate()
-  const setActive = (key: string) => navigate({ to: '/dashboard', search: { tab: key } })
+  const [mobileOpened, { toggle: toggleMobile, close: closeMobile }] = useDisclosure(false)
+  const isMobile = useMediaQuery('(max-width: 48em)')
+  const setActive = (key: string) => {
+    navigate({ to: '/dashboard', search: { tab: key } })
+    closeMobile()
+  }
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('dashboard:sidebar') === 'collapsed')
   const toggleSidebar = () => {
     setCollapsed(prev => {
@@ -104,9 +122,25 @@ function DashboardPage() {
 
   return (
     <AppShell
-      navbar={{ width: collapsed ? 60 : 260, breakpoint: 'sm' }}
+      header={{ height: 56, collapsed: !isMobile }}
+      navbar={{
+        width: collapsed ? 60 : 260,
+        breakpoint: 'sm',
+        collapsed: { mobile: !mobileOpened },
+      }}
       padding="md"
     >
+      <AppShell.Header px="md" hiddenFrom="sm">
+        <Group h="100%" justify="space-between">
+          <Group gap="xs">
+            <Burger opened={mobileOpened} onClick={toggleMobile} size="sm" />
+            <ThemeIcon size="md" variant="gradient" gradient={{ from: 'blue', to: 'cyan' }}>
+              <TbLayoutDashboard size={16} />
+            </ThemeIcon>
+            <Text fw={700} size="sm">Dashboard</Text>
+          </Group>
+        </Group>
+      </AppShell.Header>
       <AppShell.Navbar p={collapsed ? 'xs' : 'md'}>
         <AppShell.Section>
           <Group gap="xs" mb="md" justify={collapsed ? 'center' : 'space-between'}>
@@ -242,7 +276,7 @@ function DashboardPage() {
                   </Avatar>
                   <div>
                     <Text size="xs" fw={500}>{user?.name}</Text>
-                    <Text size="xs" c="dimmed">{user?.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}</Text>
+                    <Text size="xs" c="dimmed">{user?.role === 'SUPER_ADMIN' ? 'Super Admin' : user?.role === 'ADMIN' ? 'Admin' : 'QC'}</Text>
                   </div>
                 </Group>
                 <Group gap={4}>
@@ -270,12 +304,13 @@ function DashboardPage() {
       </AppShell.Navbar>
 
       <AppShell.Main>
-        {active === 'dashboard' && <OverviewPanel />}
-        {active === 'analytics' && <AnalyticsPanel />}
-        {active === 'orders' && <OrdersPanel />}
-        {active === 'messages' && <PlaceholderPanel title="Messages" desc="Kelola pesan dan notifikasi." icon={TbMessages} />}
-        {active === 'calendar' && <PlaceholderPanel title="Calendar" desc="Jadwal dan agenda kegiatan." icon={TbCalendar} />}
-        {active === 'settings' && <PlaceholderPanel title="Settings" desc="Pengaturan akun dan aplikasi." icon={TbSettings} />}
+        {active === 'dashboard' && !isQcOnly && <OverviewPanel />}
+        {active === 'tickets' && <TicketsPanel />}
+        {active === 'analytics' && !isQcOnly && <AnalyticsPanel />}
+        {active === 'orders' && !isQcOnly && <OrdersPanel />}
+        {active === 'messages' && !isQcOnly && <PlaceholderPanel title="Messages" desc="Kelola pesan dan notifikasi." icon={TbMessages} />}
+        {active === 'calendar' && !isQcOnly && <PlaceholderPanel title="Calendar" desc="Jadwal dan agenda kegiatan." icon={TbCalendar} />}
+        {active === 'settings' && !isQcOnly && <PlaceholderPanel title="Settings" desc="Pengaturan akun dan aplikasi." icon={TbSettings} />}
       </AppShell.Main>
     </AppShell>
   )
