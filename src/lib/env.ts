@@ -16,6 +16,11 @@ export const env = {
   REDIS_URL: required('REDIS_URL'),
   GOOGLE_CLIENT_ID: required('GOOGLE_CLIENT_ID'),
   GOOGLE_CLIENT_SECRET: required('GOOGLE_CLIENT_SECRET'),
-  SUPER_ADMIN_EMAILS: optional('SUPER_ADMIN_EMAIL', '').split(',').map(e => e.trim()).filter(Boolean),
+  SUPER_ADMIN_EMAILS: optional('SUPER_ADMIN_EMAIL', '')
+    .split(',')
+    .map((e) => e.trim())
+    .filter(Boolean),
   AUDIT_LOG_RETENTION_DAYS: parseInt(optional('AUDIT_LOG_RETENTION_DAYS', '90'), 10),
+  MCP_SECRET: optional('MCP_SECRET', ''),
+  MCP_SECRET_ADMIN: optional('MCP_SECRET_ADMIN', ''),
 } as const

@@ -151,12 +151,10 @@ Tests use `bun:test`. Three levels:
 bun run test              # All tests
 bun run test:unit         # tests/unit/ — env, db connection, bcrypt
 bun run test:integration  # tests/integration/ — API endpoints via app.handle()
-bun run test:e2e          # tests/e2e/ — browser tests via Lightpanda CDP
 ```
 
 - `tests/helpers.ts` — `createTestApp()`, `seedTestUser()`, `createTestSession()`, `cleanupTestData()`
 - Integration tests use `createApp().handle(new Request(...))` — no server needed
-- E2E tests use Lightpanda browser (Docker, `ws://127.0.0.1:9222`). App URLs use `host.docker.internal` from container. Lightpanda executes JS but POST fetch returns 407 — use integration tests for mutations.
 
 ## APIs
 

@@ -13,14 +13,13 @@ Full-stack web application template built with Bun, Elysia, React 19, and Vite.
 - **Auth**: Session-based (bcrypt + HttpOnly cookies) + Google OAuth
 - **Real-time**: WebSocket presence (Bun native)
 - **Dev Tools**: Click-to-source inspector (Ctrl+Shift+Cmd+C), HMR, Biome linter
-- **Testing**: bun:test (unit + integration) + [Lightpanda](https://lightpanda.io) (E2E via CDP)
+- **Testing**: bun:test (unit + integration)
 
 ## Prerequisites
 
 - [Bun](https://bun.sh) >= 1.3
 - PostgreSQL running on `localhost:5432`
 - Redis running on `localhost:6379`
-- [Lightpanda](https://github.com/lightpanda-io/browser) (optional, for E2E tests)
 
 ## Setup
 
@@ -68,7 +67,6 @@ bun run start    # Start production server
 | `bun run test`             | Run all tests                                    |
 | `bun run test:unit`        | Run unit tests                                   |
 | `bun run test:integration` | Run integration tests                            |
-| `bun run test:e2e`         | Run E2E tests (requires Lightpanda + dev server) |
 | `bun run typecheck`        | TypeScript type check                            |
 | `bun run lint`             | Lint with Biome                                  |
 | `bun run lint:fix`         | Lint and auto-fix                                |
@@ -119,8 +117,6 @@ tests/
   helpers.ts         # Test utilities (seedTestUser, createTestSession, cleanup)
   unit/              # Unit tests (env, db, password)
   integration/       # Integration tests (auth, health, hello API)
-  e2e/               # E2E tests via Lightpanda CDP
-    browser.ts       # Lightpanda CDP helper class
 ```
 
 ## Roles & Routing
@@ -248,33 +244,6 @@ All views use React Flow with auto-save positions and viewport per view.
 - Shared `ThemeToggle` component (`src/frontend/components/ThemeToggle.tsx`)
 - Choice persisted in `localStorage` by Mantine
 - Flash-free reload: `index.html` reads `localStorage` before first paint
-
-## E2E Tests (Lightpanda)
-
-Lightpanda runs as a Docker container:
-
-```yaml
-# docker-compose.yml
-services:
-  lightpanda:
-    image: lightpanda/browser:nightly
-    container_name: lightpanda
-    restart: unless-stopped
-    ports:
-      - "9222:9222"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    environment:
-      - LIGHTPANDA_DISABLE_TELEMETRY=true
-    mem_limit: 256m
-    cpus: "0.5"
-```
-
-```bash
-docker compose up -d     # Start Lightpanda
-bun run dev              # Start dev server
-bun run test:e2e         # Run E2E tests
-```
 
 ## Environment Variables
 

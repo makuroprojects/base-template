@@ -21,34 +21,33 @@ import {
   Tooltip,
 } from '@mantine/core'
 import { useDisclosure, useMediaQuery } from '@mantine/hooks'
+import { modals } from '@mantine/modals'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
 import {
   TbActivity,
   TbArrowDownRight,
   TbArrowUpRight,
   TbBell,
+  TbBug,
   TbCalendar,
-  TbChartBar,
   TbChevronRight,
   TbClipboardList,
   TbCode,
-  TbLayoutSidebarLeftCollapse,
-  TbLayoutSidebarLeftExpand,
   TbCoin,
   TbLayoutDashboard,
+  TbLayoutSidebarLeftCollapse,
+  TbLayoutSidebarLeftExpand,
   TbLogout,
   TbMessages,
   TbReportAnalytics,
   TbSettings,
-  TbBug,
   TbUser,
   TbUsers,
 } from 'react-icons/tb'
-import { useState } from 'react'
-import { modals } from '@mantine/modals'
-import { useLogout, useSession } from '@/frontend/hooks/useAuth'
 import { ThemeToggle } from '@/frontend/components/ThemeToggle'
 import { TicketsPanel } from '@/frontend/components/TicketsPanel'
+import { useLogout, useSession } from '@/frontend/hooks/useAuth'
 
 const validTabs = ['dashboard', 'tickets', 'analytics', 'orders', 'messages', 'calendar', 'settings'] as const
 
@@ -77,7 +76,14 @@ export const Route = createFileRoute('/dashboard')({
   component: DashboardPage,
 })
 
-type NavItem = { label: string; icon: typeof TbLayoutDashboard; key: string; badge?: number; qcOnly?: boolean; adminOnly?: boolean }
+type NavItem = {
+  label: string
+  icon: typeof TbLayoutDashboard
+  key: string
+  badge?: number
+  qcOnly?: boolean
+  adminOnly?: boolean
+}
 
 const navItemsAll: NavItem[] = [
   { label: 'Dashboard', icon: TbLayoutDashboard, key: 'dashboard', adminOnly: true },
@@ -95,7 +101,7 @@ function DashboardPage() {
   const user = data?.user
   const { tab: active } = Route.useSearch()
   const isQcOnly = user?.role === 'QC'
-  const navItems = navItemsAll.filter(item => isQcOnly ? !item.adminOnly : true)
+  const navItems = navItemsAll.filter((item) => (isQcOnly ? !item.adminOnly : true))
   const navigate = useNavigate()
   const [mobileOpened, { toggle: toggleMobile, close: closeMobile }] = useDisclosure(false)
   const isMobile = useMediaQuery('(max-width: 48em)')
@@ -105,7 +111,7 @@ function DashboardPage() {
   }
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('dashboard:sidebar') === 'collapsed')
   const toggleSidebar = () => {
-    setCollapsed(prev => {
+    setCollapsed((prev) => {
       const next = !prev
       localStorage.setItem('dashboard:sidebar', next ? 'collapsed' : 'open')
       return next
@@ -137,7 +143,9 @@ function DashboardPage() {
             <ThemeIcon size="md" variant="gradient" gradient={{ from: 'blue', to: 'cyan' }}>
               <TbLayoutDashboard size={16} />
             </ThemeIcon>
-            <Text fw={700} size="sm">Dashboard</Text>
+            <Text fw={700} size="sm">
+              Dashboard
+            </Text>
           </Group>
         </Group>
       </AppShell.Header>
@@ -157,8 +165,12 @@ function DashboardPage() {
                     <TbLayoutDashboard size={18} />
                   </ThemeIcon>
                   <div>
-                    <Text fw={700} size="sm">Dashboard</Text>
-                    <Text size="xs" c="dimmed">Admin Panel</Text>
+                    <Text fw={700} size="sm">
+                      Dashboard
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      Admin Panel
+                    </Text>
                   </div>
                 </Group>
                 <Tooltip label="Minimize sidebar">
@@ -185,7 +197,12 @@ function DashboardPage() {
                 >
                   <item.icon size={18} />
                   {item.badge && (
-                    <Badge size="xs" color="red" variant="filled" style={{ position: 'absolute', top: -2, right: -2, padding: '0 4px', minWidth: 16, height: 16 }}>
+                    <Badge
+                      size="xs"
+                      color="red"
+                      variant="filled"
+                      style={{ position: 'absolute', top: -2, right: -2, padding: '0 4px', minWidth: 16, height: 16 }}
+                    >
                       {item.badge}
                     </Badge>
                   )}
@@ -197,20 +214,24 @@ function DashboardPage() {
                 label={item.label}
                 leftSection={<item.icon size={18} />}
                 rightSection={
-                  item.badge
-                    ? <Badge size="xs" color="red" variant="filled">{item.badge}</Badge>
-                    : <TbChevronRight size={14} />
+                  item.badge ? (
+                    <Badge size="xs" color="red" variant="filled">
+                      {item.badge}
+                    </Badge>
+                  ) : (
+                    <TbChevronRight size={14} />
+                  )
                 }
                 active={active === item.key}
                 onClick={() => setActive(item.key)}
                 variant="light"
                 mb={4}
               />
-            )
+            ),
           )}
 
-          {user?.role === 'SUPER_ADMIN' && (
-            collapsed ? (
+          {user?.role === 'SUPER_ADMIN' &&
+            (collapsed ? (
               <Tooltip label="Dev Console" position="right">
                 <ActionIcon
                   variant="subtle"
@@ -226,7 +247,9 @@ function DashboardPage() {
               </Tooltip>
             ) : (
               <>
-                <Text size="xs" c="dimmed" fw={500} mt="md" mb={4} ml="sm">Super Admin</Text>
+                <Text size="xs" c="dimmed" fw={500} mt="md" mb={4} ml="sm">
+                  Super Admin
+                </Text>
                 <NavLink
                   label="Dev Console"
                   leftSection={<TbCode size={18} />}
@@ -237,8 +260,7 @@ function DashboardPage() {
                   mb={4}
                 />
               </>
-            )
-          )}
+            ))}
         </AppShell.Section>
 
         <AppShell.Section>
@@ -257,13 +279,7 @@ function DashboardPage() {
                   </ActionIcon>
                 </Tooltip>
                 <Tooltip label="Logout" position="right">
-                  <ActionIcon
-                    variant="subtle"
-                    color="red"
-                    size="sm"
-                    onClick={confirmLogout}
-                    loading={logout.isPending}
-                  >
+                  <ActionIcon variant="subtle" color="red" size="sm" onClick={confirmLogout} loading={logout.isPending}>
                     <TbLogout size={14} />
                   </ActionIcon>
                 </Tooltip>
@@ -275,8 +291,12 @@ function DashboardPage() {
                     {user?.name?.charAt(0).toUpperCase()}
                   </Avatar>
                   <div>
-                    <Text size="xs" fw={500}>{user?.name}</Text>
-                    <Text size="xs" c="dimmed">{user?.role === 'SUPER_ADMIN' ? 'Super Admin' : user?.role === 'ADMIN' ? 'Admin' : 'QC'}</Text>
+                    <Text size="xs" fw={500}>
+                      {user?.name}
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {user?.role === 'SUPER_ADMIN' ? 'Super Admin' : user?.role === 'ADMIN' ? 'Admin' : 'QC'}
+                    </Text>
                   </div>
                 </Group>
                 <Group gap={4}>
@@ -287,12 +307,7 @@ function DashboardPage() {
                     </ActionIcon>
                   </Tooltip>
                   <Tooltip label="Logout">
-                    <ActionIcon
-                      variant="subtle"
-                      color="red"
-                      onClick={confirmLogout}
-                      loading={logout.isPending}
-                    >
+                    <ActionIcon variant="subtle" color="red" onClick={confirmLogout} loading={logout.isPending}>
                       <TbLogout size={16} />
                     </ActionIcon>
                   </Tooltip>
@@ -308,9 +323,15 @@ function DashboardPage() {
         {active === 'tickets' && <TicketsPanel />}
         {active === 'analytics' && !isQcOnly && <AnalyticsPanel />}
         {active === 'orders' && !isQcOnly && <OrdersPanel />}
-        {active === 'messages' && !isQcOnly && <PlaceholderPanel title="Messages" desc="Kelola pesan dan notifikasi." icon={TbMessages} />}
-        {active === 'calendar' && !isQcOnly && <PlaceholderPanel title="Calendar" desc="Jadwal dan agenda kegiatan." icon={TbCalendar} />}
-        {active === 'settings' && !isQcOnly && <PlaceholderPanel title="Settings" desc="Pengaturan akun dan aplikasi." icon={TbSettings} />}
+        {active === 'messages' && !isQcOnly && (
+          <PlaceholderPanel title="Messages" desc="Kelola pesan dan notifikasi." icon={TbMessages} />
+        )}
+        {active === 'calendar' && !isQcOnly && (
+          <PlaceholderPanel title="Calendar" desc="Jadwal dan agenda kegiatan." icon={TbCalendar} />
+        )}
+        {active === 'settings' && !isQcOnly && (
+          <PlaceholderPanel title="Settings" desc="Pengaturan akun dan aplikasi." icon={TbSettings} />
+        )}
       </AppShell.Main>
     </AppShell>
   )
@@ -344,12 +365,16 @@ function OverviewPanel() {
           {statsData.map((stat) => (
             <Card key={stat.title} withBorder padding="lg" radius="md">
               <Group justify="space-between" mb="xs">
-                <Text size="xs" c="dimmed" fw={600} tt="uppercase">{stat.title}</Text>
+                <Text size="xs" c="dimmed" fw={600} tt="uppercase">
+                  {stat.title}
+                </Text>
                 <ThemeIcon variant="light" color={stat.color} size="sm" radius="xl">
                   <stat.icon size={14} />
                 </ThemeIcon>
               </Group>
-              <Text fw={700} size="xl">{stat.value}</Text>
+              <Text fw={700} size="xl">
+                {stat.value}
+              </Text>
               <Group gap={4} mt={4}>
                 {stat.diff > 0 ? (
                   <TbArrowUpRight size={14} color="var(--mantine-color-teal-6)" />
@@ -359,7 +384,9 @@ function OverviewPanel() {
                 <Text size="xs" c={stat.diff > 0 ? 'teal' : 'red'} fw={500}>
                   {Math.abs(stat.diff)}%
                 </Text>
-                <Text size="xs" c="dimmed">vs bulan lalu</Text>
+                <Text size="xs" c="dimmed">
+                  vs bulan lalu
+                </Text>
               </Group>
             </Card>
           ))}
@@ -367,7 +394,9 @@ function OverviewPanel() {
 
         <SimpleGrid cols={{ base: 1, md: 2 }}>
           <Card withBorder padding="lg" radius="md">
-            <Text fw={600} mb="md">Traffic Source</Text>
+            <Text fw={600} mb="md">
+              Traffic Source
+            </Text>
             <Stack gap="sm">
               {[
                 { label: 'Direct', value: 45, color: 'blue' },
@@ -378,7 +407,9 @@ function OverviewPanel() {
                 <div key={item.label}>
                   <Group justify="space-between" mb={4}>
                     <Text size="sm">{item.label}</Text>
-                    <Text size="sm" fw={500}>{item.value}%</Text>
+                    <Text size="sm" fw={500}>
+                      {item.value}%
+                    </Text>
                   </Group>
                   <Progress value={item.value} color={item.color} size="sm" radius="xl" />
                 </div>
@@ -387,7 +418,9 @@ function OverviewPanel() {
           </Card>
 
           <Card withBorder padding="lg" radius="md">
-            <Text fw={600} mb="md">Performance</Text>
+            <Text fw={600} mb="md">
+              Performance
+            </Text>
             <Group justify="center" gap="xl">
               <div style={{ textAlign: 'center' }}>
                 <RingProgress
@@ -395,9 +428,15 @@ function OverviewPanel() {
                   thickness={10}
                   roundCaps
                   sections={[{ value: 72, color: 'blue' }]}
-                  label={<Text ta="center" fw={700} size="lg">72%</Text>}
+                  label={
+                    <Text ta="center" fw={700} size="lg">
+                      72%
+                    </Text>
+                  }
                 />
-                <Text size="xs" c="dimmed" mt={4}>Completion</Text>
+                <Text size="xs" c="dimmed" mt={4}>
+                  Completion
+                </Text>
               </div>
               <div style={{ textAlign: 'center' }}>
                 <RingProgress
@@ -405,9 +444,15 @@ function OverviewPanel() {
                   thickness={10}
                   roundCaps
                   sections={[{ value: 89, color: 'teal' }]}
-                  label={<Text ta="center" fw={700} size="lg">89%</Text>}
+                  label={
+                    <Text ta="center" fw={700} size="lg">
+                      89%
+                    </Text>
+                  }
                 />
-                <Text size="xs" c="dimmed" mt={4}>Uptime</Text>
+                <Text size="xs" c="dimmed" mt={4}>
+                  Uptime
+                </Text>
               </div>
               <div style={{ textAlign: 'center' }}>
                 <RingProgress
@@ -415,9 +460,15 @@ function OverviewPanel() {
                   thickness={10}
                   roundCaps
                   sections={[{ value: 56, color: 'orange' }]}
-                  label={<Text ta="center" fw={700} size="lg">56%</Text>}
+                  label={
+                    <Text ta="center" fw={700} size="lg">
+                      56%
+                    </Text>
+                  }
                 />
-                <Text size="xs" c="dimmed" mt={4}>Efficiency</Text>
+                <Text size="xs" c="dimmed" mt={4}>
+                  Efficiency
+                </Text>
               </div>
             </Group>
           </Card>
@@ -444,8 +495,12 @@ function AnalyticsPanel() {
             { label: 'Avg. Session', value: '4m 23s', diff: 8 },
           ].map((stat) => (
             <Card key={stat.label} withBorder padding="lg" radius="md">
-              <Text size="xs" c="dimmed" fw={600} tt="uppercase">{stat.label}</Text>
-              <Text fw={700} size="xl" mt={4}>{stat.value}</Text>
+              <Text size="xs" c="dimmed" fw={600} tt="uppercase">
+                {stat.label}
+              </Text>
+              <Text fw={700} size="xl" mt={4}>
+                {stat.value}
+              </Text>
               <Group gap={4} mt={4}>
                 {stat.diff > 0 ? (
                   <TbArrowUpRight size={14} color="var(--mantine-color-teal-6)" />
@@ -461,7 +516,9 @@ function AnalyticsPanel() {
         </SimpleGrid>
 
         <Card withBorder padding="lg" radius="md">
-          <Text fw={600} mb="md">Top Pages</Text>
+          <Text fw={600} mb="md">
+            Top Pages
+          </Text>
           <Table highlightOnHover>
             <Table.Thead>
               <Table.Tr>
@@ -481,11 +538,19 @@ function AnalyticsPanel() {
               ].map((row) => (
                 <Table.Tr key={row.page}>
                   <Table.Td>
-                    <Text size="sm" fw={500}>{row.page}</Text>
+                    <Text size="sm" fw={500}>
+                      {row.page}
+                    </Text>
                   </Table.Td>
-                  <Table.Td ta="right"><Text size="sm">{row.views}</Text></Table.Td>
-                  <Table.Td ta="right"><Text size="sm">{row.unique}</Text></Table.Td>
-                  <Table.Td ta="right"><Text size="sm">{row.bounce}</Text></Table.Td>
+                  <Table.Td ta="right">
+                    <Text size="sm">{row.views}</Text>
+                  </Table.Td>
+                  <Table.Td ta="right">
+                    <Text size="sm">{row.unique}</Text>
+                  </Table.Td>
+                  <Table.Td ta="right">
+                    <Text size="sm">{row.bounce}</Text>
+                  </Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>
@@ -521,7 +586,9 @@ function OrdersPanel() {
       <Stack gap="lg">
         <Group justify="space-between">
           <Title order={3}>Orders</Title>
-          <Badge variant="light" size="lg">{ordersData.length} orders</Badge>
+          <Badge variant="light" size="lg">
+            {ordersData.length} orders
+          </Badge>
         </Group>
 
         <Card withBorder radius="md" p={0}>
@@ -538,15 +605,29 @@ function OrdersPanel() {
             <Table.Tbody>
               {ordersData.map((order) => (
                 <Table.Tr key={order.id}>
-                  <Table.Td><Text size="sm" fw={500}>{order.id}</Text></Table.Td>
-                  <Table.Td><Text size="sm">{order.customer}</Text></Table.Td>
-                  <Table.Td><Text size="sm" fw={500}>{order.amount}</Text></Table.Td>
+                  <Table.Td>
+                    <Text size="sm" fw={500}>
+                      {order.id}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm">{order.customer}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm" fw={500}>
+                      {order.amount}
+                    </Text>
+                  </Table.Td>
                   <Table.Td>
                     <Badge color={orderStatusColor[order.status]} variant="light" size="sm">
                       {order.status}
                     </Badge>
                   </Table.Td>
-                  <Table.Td ta="right"><Text size="sm" c="dimmed">{order.date}</Text></Table.Td>
+                  <Table.Td ta="right">
+                    <Text size="sm" c="dimmed">
+                      {order.date}
+                    </Text>
+                  </Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>
@@ -570,21 +651,34 @@ function RecentActivityTable() {
 
   return (
     <Card withBorder padding="lg" radius="md">
-      <Text fw={600} mb="md">Recent Activity</Text>
+      <Text fw={600} mb="md">
+        Recent Activity
+      </Text>
       <Stack gap="sm">
-        {activities.map((act, i) => (
-          <Paper key={i} p="sm" radius="sm" bg="var(--mantine-color-default-hover)">
+        {activities.map((act) => (
+          <Paper
+            key={`${act.user}-${act.action}-${act.time}`}
+            p="sm"
+            radius="sm"
+            bg="var(--mantine-color-default-hover)"
+          >
             <Group justify="space-between">
               <Group gap="sm">
                 <Avatar color={act.color} radius="xl" size="sm">
                   {act.user.charAt(0)}
                 </Avatar>
                 <div>
-                  <Text size="sm" fw={500}>{act.user}</Text>
-                  <Text size="xs" c="dimmed">{act.action}</Text>
+                  <Text size="sm" fw={500}>
+                    {act.user}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {act.action}
+                  </Text>
                 </div>
               </Group>
-              <Text size="xs" c="dimmed">{act.time}</Text>
+              <Text size="xs" c="dimmed">
+                {act.time}
+              </Text>
             </Group>
           </Paper>
         ))}
@@ -595,7 +689,15 @@ function RecentActivityTable() {
 
 // ─── Placeholder Panel ─────────────────────────────────
 
-function PlaceholderPanel({ title, desc, icon: Icon }: { title: string; desc: string; icon: React.ComponentType<{ size: number }> }) {
+function PlaceholderPanel({
+  title,
+  desc,
+  icon: Icon,
+}: {
+  title: string
+  desc: string
+  icon: React.ComponentType<{ size: number }>
+}) {
   return (
     <Container size="lg">
       <Stack align="center" justify="center" gap="md" mih={400}>
@@ -603,7 +705,9 @@ function PlaceholderPanel({ title, desc, icon: Icon }: { title: string; desc: st
           <Icon size={32} />
         </ThemeIcon>
         <Title order={3}>{title}</Title>
-        <Text c="dimmed" ta="center" maw={400}>{desc}</Text>
+        <Text c="dimmed" ta="center" maw={400}>
+          {desc}
+        </Text>
       </Stack>
     </Container>
   )

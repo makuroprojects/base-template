@@ -10,8 +10,24 @@ datasource db {
 
 enum Role {
   USER
+  QC
   ADMIN
   SUPER_ADMIN
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  READY_FOR_QC
+  REOPENED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
 }
 
 model User {
@@ -24,8 +40,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  sessions  Session[]
-  auditLogs AuditLog[]
+  sessions      Session[]
+  auditLogs     AuditLog[]
+  reported      Ticket[]        @relation("TicketReporter")
+  assigned      Ticket[]        @relation("TicketAssignee")
+  comments      TicketComment[]
 
   @@map("user")
 }
@@ -57,4 +76,58 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
   @@map("audit_log")
+}
+
+model Ticket {
+  id          String         @id @default(uuid())
+  title       String
+  description String
+  status      TicketStatus   @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+  route       String?
+  reporterId  String
+  assigneeId  String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  closedAt    DateTime?
+
+  reporter User             @relation("TicketReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  assignee User?            @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  comments TicketComment[]
+  evidence TicketEvidence[]
+
+  @@index([status])
+  @@index([reporterId])
+  @@index([assigneeId])
+  @@index([createdAt])
+  @@map("ticket")
+}
+
+model TicketComment {
+  id        String   @id @default(uuid())
+  ticketId  String
+  authorId  String?
+  authorTag String
+  body      String
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author User?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId])
+  @@map("ticket_comment")
+}
+
+model TicketEvidence {
+  id        String   @id @default(uuid())
+  ticketId  String
+  kind      String
+  url       String
+  note      String?
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@map("ticket_evidence")
 }

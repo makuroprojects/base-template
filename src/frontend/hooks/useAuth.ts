@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 
-export type Role = 'USER' | 'ADMIN' | 'SUPER_ADMIN'
+export type Role = 'USER' | 'QC' | 'ADMIN' | 'SUPER_ADMIN'
 
 export interface User {
   id: string
@@ -13,9 +13,14 @@ export interface User {
 
 export function getDefaultRoute(role: Role): string {
   switch (role) {
-    case 'SUPER_ADMIN': return '/dev'
-    case 'ADMIN': return '/dashboard'
-    default: return '/profile'
+    case 'SUPER_ADMIN':
+      return '/dev'
+    case 'ADMIN':
+      return '/dashboard'
+    case 'QC':
+      return '/dashboard'
+    default:
+      return '/profile'
   }
 }
 
@@ -60,8 +65,7 @@ export function useLogout() {
   const navigate = useNavigate()
 
   return useMutation({
-    mutationFn: () =>
-      apiFetch<{ ok: boolean }>('/api/auth/logout', { method: 'POST' }),
+    mutationFn: () => apiFetch<{ ok: boolean }>('/api/auth/logout', { method: 'POST' }),
     onSuccess: () => {
       queryClient.setQueryData(['auth', 'session'], { user: null })
       navigate({ to: '/login' })

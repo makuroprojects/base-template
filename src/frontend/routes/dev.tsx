@@ -10,6 +10,7 @@ import {
   Group,
   Menu,
   NavLink,
+  Pagination,
   SegmentedControl,
   Select,
   SimpleGrid,
@@ -23,23 +24,25 @@ import {
 import { useDisclosure, useMediaQuery } from '@mantine/hooks'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Background,
   Controls,
   type Edge,
+  Handle,
+  MarkerType,
   type Node,
+  Position,
   ReactFlow,
   ReactFlowProvider,
   useEdgesState,
   useNodesState,
   useReactFlow,
-  Position,
-  MarkerType,
-  Handle,
 } from '@xyflow/react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import '@xyflow/react/dist/style.css'
+import { modals } from '@mantine/modals'
 import {
+  TbBug,
   TbChevronRight,
   TbCircleFilled,
   TbCode,
@@ -47,30 +50,27 @@ import {
   TbDots,
   TbFileText,
   TbLayoutDashboard,
-  TbLock,
-  TbLockOpen,
-  TbArrowRight,
-  TbBug,
   TbLayoutSidebarLeftCollapse,
   TbLayoutSidebarLeftExpand,
+  TbLock,
+  TbLockOpen,
   TbLogout,
   TbRefresh,
   TbServer,
-  TbSitemap,
-  TbTrash,
   TbSettings,
   TbShieldCheck,
   TbShieldOff,
+  TbSitemap,
+  TbTrash,
   TbUser,
   TbUserSearch,
   TbUsers,
   TbWifi,
 } from 'react-icons/tb'
-import { modals } from '@mantine/modals'
-import { useLogout, useSession, type Role } from '@/frontend/hooks/useAuth'
-import { usePresence } from '@/frontend/hooks/usePresence'
 import { ThemeToggle } from '@/frontend/components/ThemeToggle'
 import { TicketsPanel } from '@/frontend/components/TicketsPanel'
+import { type Role, useLogout, useSession } from '@/frontend/hooks/useAuth'
+import { usePresence } from '@/frontend/hooks/usePresence'
 
 const validTabs = ['overview', 'users', 'tickets', 'app-logs', 'user-logs', 'database', 'project', 'settings'] as const
 
@@ -129,7 +129,7 @@ function DevPage() {
   }
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('dev:sidebar') === 'collapsed')
   const toggleSidebar = () => {
-    setCollapsed(prev => {
+    setCollapsed((prev) => {
       const next = !prev
       localStorage.setItem('dev:sidebar', next ? 'collapsed' : 'open')
       return next
@@ -161,7 +161,9 @@ function DevPage() {
             <ThemeIcon size="md" variant="gradient" gradient={{ from: 'red', to: 'orange' }}>
               <TbCode size={16} />
             </ThemeIcon>
-            <Text fw={700} size="sm">Dev Console</Text>
+            <Text fw={700} size="sm">
+              Dev Console
+            </Text>
           </Group>
         </Group>
       </AppShell.Header>
@@ -181,8 +183,12 @@ function DevPage() {
                     <TbCode size={18} />
                   </ThemeIcon>
                   <div>
-                    <Text fw={700} size="sm">Dev Console</Text>
-                    <Text size="xs" c="dimmed">Super Admin</Text>
+                    <Text fw={700} size="sm">
+                      Dev Console
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      Super Admin
+                    </Text>
                   </div>
                 </Group>
                 <Tooltip label="Minimize sidebar">
@@ -221,15 +227,12 @@ function DevPage() {
                 variant="light"
                 mb={4}
               />
-            )
+            ),
           )}
         </AppShell.Section>
 
         <AppShell.Section>
-          <Box
-            p={collapsed ? 'xs' : 'sm'}
-            style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}
-          >
+          <Box p={collapsed ? 'xs' : 'sm'} style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}>
             {collapsed ? (
               <Stack align="center" gap={4}>
                 <Tooltip label={user?.name} position="right">
@@ -239,13 +242,7 @@ function DevPage() {
                 </Tooltip>
                 <ThemeToggle size="sm" />
                 <Tooltip label="Logout" position="right">
-                  <ActionIcon
-                    variant="subtle"
-                    color="red"
-                    size="sm"
-                    onClick={confirmLogout}
-                    loading={logout.isPending}
-                  >
+                  <ActionIcon variant="subtle" color="red" size="sm" onClick={confirmLogout} loading={logout.isPending}>
                     <TbLogout size={14} />
                   </ActionIcon>
                 </Tooltip>
@@ -257,19 +254,18 @@ function DevPage() {
                     {user?.name?.charAt(0).toUpperCase()}
                   </Avatar>
                   <div>
-                    <Text size="xs" fw={500}>{user?.name}</Text>
-                    <Text size="xs" c="dimmed">{user?.email}</Text>
+                    <Text size="xs" fw={500}>
+                      {user?.name}
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {user?.email}
+                    </Text>
                   </div>
                 </Group>
                 <Group gap={4}>
                   <ThemeToggle size="sm" />
                   <Tooltip label="Logout">
-                    <ActionIcon
-                      variant="subtle"
-                      color="red"
-                      onClick={confirmLogout}
-                      loading={logout.isPending}
-                    >
+                    <ActionIcon variant="subtle" color="red" onClick={confirmLogout} loading={logout.isPending}>
                       <TbLogout size={16} />
                     </ActionIcon>
                   </Tooltip>
@@ -288,7 +284,9 @@ function DevPage() {
         {active === 'user-logs' && <UserLogsPanel />}
         {active === 'database' && <DatabasePanel />}
         {active === 'project' && <ProjectPanel />}
-        {active === 'settings' && <PlaceholderPanel title="Settings" desc="System configuration akan ditampilkan di sini." icon={TbSettings} />}
+        {active === 'settings' && (
+          <PlaceholderPanel title="Settings" desc="System configuration akan ditampilkan di sini." icon={TbSettings} />
+        )}
       </AppShell.Main>
     </AppShell>
   )
@@ -306,16 +304,17 @@ const overviewStats = [
 function OverviewPanel() {
   const { data } = useQuery({
     queryKey: ['admin', 'users'],
-    queryFn: () => fetch('/api/admin/users', { credentials: 'include' }).then((r) => r.json()) as Promise<{ users: AdminUser[] }>,
+    queryFn: () =>
+      fetch('/api/admin/users', { credentials: 'include' }).then((r) => r.json()) as Promise<{ users: AdminUser[] }>,
   })
   const { onlineUserIds } = usePresence()
 
   const users = data?.users ?? []
   const counts = {
     'Total Users': users.length,
-    'Online': onlineUserIds.length,
-    'Admin': users.filter((u) => u.role === 'ADMIN' || u.role === 'SUPER_ADMIN').length,
-    'Blocked': users.filter((u) => u.blocked).length,
+    Online: onlineUserIds.length,
+    Admin: users.filter((u) => u.role === 'ADMIN' || u.role === 'SUPER_ADMIN').length,
+    Blocked: users.filter((u) => u.blocked).length,
   }
 
   return (
@@ -326,12 +325,16 @@ function OverviewPanel() {
           {overviewStats.map((stat) => (
             <Card key={stat.title} withBorder padding="lg" radius="md">
               <Group justify="space-between" mb="xs">
-                <Text size="sm" c="dimmed" fw={500}>{stat.title}</Text>
+                <Text size="sm" c="dimmed" fw={500}>
+                  {stat.title}
+                </Text>
                 <ThemeIcon variant="light" color={stat.color} size="sm">
                   <stat.icon size={14} />
                 </ThemeIcon>
               </Group>
-              <Text fw={700} size="xl">{counts[stat.title as keyof typeof counts]}</Text>
+              <Text fw={700} size="xl">
+                {counts[stat.title as keyof typeof counts]}
+              </Text>
             </Card>
           ))}
         </SimpleGrid>
@@ -352,7 +355,8 @@ function UsersPanel() {
   const queryClient = useQueryClient()
   const { data, isLoading } = useQuery({
     queryKey: ['admin', 'users'],
-    queryFn: () => fetch('/api/admin/users', { credentials: 'include' }).then((r) => r.json()) as Promise<{ users: AdminUser[] }>,
+    queryFn: () =>
+      fetch('/api/admin/users', { credentials: 'include' }).then((r) => r.json()) as Promise<{ users: AdminUser[] }>,
   })
 
   const { data: sessionData } = useSession()
@@ -388,7 +392,9 @@ function UsersPanel() {
       <Stack gap="lg">
         <Group justify="space-between">
           <Title order={3}>User Management</Title>
-          <Badge variant="light" size="lg">{users.length} users</Badge>
+          <Badge variant="light" size="lg">
+            {users.length} users
+          </Badge>
         </Group>
 
         <Card withBorder radius="md" p={0}>
@@ -405,7 +411,9 @@ function UsersPanel() {
               {isLoading && (
                 <Table.Tr>
                   <Table.Td colSpan={4}>
-                    <Text ta="center" c="dimmed" py="md">Loading...</Text>
+                    <Text ta="center" c="dimmed" py="md">
+                      Loading...
+                    </Text>
                   </Table.Td>
                 </Table.Tr>
               )}
@@ -438,9 +446,16 @@ function UsersPanel() {
                         </div>
                         <div>
                           <Text size="sm" fw={500}>
-                            {u.name} {isSelf && <Text span c="dimmed" size="xs">(you)</Text>}
+                            {u.name}{' '}
+                            {isSelf && (
+                              <Text span c="dimmed" size="xs">
+                                (you)
+                              </Text>
+                            )}
                           </Text>
-                          <Text size="xs" c="dimmed">{u.email}</Text>
+                          <Text size="xs" c="dimmed">
+                            {u.email}
+                          </Text>
                         </div>
                       </Group>
                     </Table.Td>
@@ -451,11 +466,17 @@ function UsersPanel() {
                     </Table.Td>
                     <Table.Td>
                       {u.blocked ? (
-                        <Badge color="red" variant="filled" size="sm">Blocked</Badge>
+                        <Badge color="red" variant="filled" size="sm">
+                          Blocked
+                        </Badge>
                       ) : isOnline ? (
-                        <Badge color="green" variant="filled" size="sm">Online</Badge>
+                        <Badge color="green" variant="filled" size="sm">
+                          Online
+                        </Badge>
                       ) : (
-                        <Badge color="gray" variant="light" size="sm">Offline</Badge>
+                        <Badge color="gray" variant="light" size="sm">
+                          Offline
+                        </Badge>
                       )}
                     </Table.Td>
                     <Table.Td ta="right">
@@ -543,8 +564,11 @@ const levelBadge: Record<string, { color: string }> = {
   error: { color: 'red' },
 }
 
+const PAGE_SIZE = 25
+
 function AppLogsPanel() {
   const [levelFilter, setLevelFilter] = useState<string>('all')
+  const [page, setPage] = useState(1)
   const queryClient = useQueryClient()
 
   const { data, isLoading, refetch, isFetching } = useQuery({
@@ -552,7 +576,9 @@ function AppLogsPanel() {
     queryFn: () => {
       const params = new URLSearchParams({ limit: '200' })
       if (levelFilter !== 'all') params.set('level', levelFilter)
-      return fetch(`/api/admin/logs/app?${params}`, { credentials: 'include' }).then((r) => r.json()) as Promise<{ logs: AppLogEntry[] }>
+      return fetch(`/api/admin/logs/app?${params}`, { credentials: 'include' }).then((r) => r.json()) as Promise<{
+        logs: AppLogEntry[]
+      }>
     },
     refetchInterval: 5000,
   })
@@ -563,6 +589,13 @@ function AppLogsPanel() {
   })
 
   const logs = data?.logs ?? []
+  const ordered = [...logs].reverse()
+  const totalPages = Math.max(1, Math.ceil(ordered.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const pagedLogs = ordered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+  useEffect(() => {
+    setPage(1)
+  }, [])
 
   return (
     <Container size="lg">
@@ -570,7 +603,9 @@ function AppLogsPanel() {
         <Group justify="space-between">
           <Group gap="sm">
             <Title order={3}>App Logs</Title>
-            <Badge variant="light" color="gray" size="sm">redis</Badge>
+            <Badge variant="light" color="gray" size="sm">
+              redis
+            </Badge>
           </Group>
           <Group gap="sm">
             <SegmentedControl
@@ -588,7 +623,9 @@ function AppLogsPanel() {
               <ActionIcon
                 variant="subtle"
                 color="red"
-                onClick={() => { if (confirm('Hapus semua app logs?')) clearLogs.mutate() }}
+                onClick={() => {
+                  if (confirm('Hapus semua app logs?')) clearLogs.mutate()
+                }}
                 loading={clearLogs.isPending}
               >
                 <TbTrash size={16} />
@@ -616,18 +653,22 @@ function AppLogsPanel() {
               {isLoading && (
                 <Table.Tr>
                   <Table.Td colSpan={4}>
-                    <Text ta="center" c="dimmed" py="md">Loading...</Text>
+                    <Text ta="center" c="dimmed" py="md">
+                      Loading...
+                    </Text>
                   </Table.Td>
                 </Table.Tr>
               )}
               {logs.length === 0 && !isLoading && (
                 <Table.Tr>
                   <Table.Td colSpan={4}>
-                    <Text ta="center" c="dimmed" py="md">Belum ada log</Text>
+                    <Text ta="center" c="dimmed" py="md">
+                      Belum ada log
+                    </Text>
                   </Table.Td>
                 </Table.Tr>
               )}
-              {[...logs].reverse().map((log) => {
+              {pagedLogs.map((log) => {
                 const badge = levelBadge[log.level] ?? levelBadge.info
                 return (
                   <Table.Tr key={log.id}>
@@ -642,10 +683,14 @@ function AppLogsPanel() {
                       </Badge>
                     </Table.Td>
                     <Table.Td>
-                      <Text size="sm" ff="monospace">{log.message}</Text>
+                      <Text size="sm" ff="monospace">
+                        {log.message}
+                      </Text>
                     </Table.Td>
                     <Table.Td>
-                      <Text size="xs" c="dimmed" ff="monospace">{log.detail ?? '—'}</Text>
+                      <Text size="xs" c="dimmed" ff="monospace">
+                        {log.detail ?? '—'}
+                      </Text>
                     </Table.Td>
                   </Table.Tr>
                 )
@@ -653,6 +698,15 @@ function AppLogsPanel() {
             </Table.Tbody>
           </Table>
         </Card>
+
+        {ordered.length > PAGE_SIZE && (
+          <Group justify="space-between">
+            <Text size="xs" c="dimmed">
+              {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, ordered.length)} of {ordered.length}
+            </Text>
+            <Pagination value={safePage} onChange={setPage} total={totalPages} size="sm" />
+          </Group>
+        )}
       </Stack>
     </Container>
   )
@@ -683,12 +737,14 @@ const actionBadge: Record<string, { color: string; label: string }> = {
 function UserLogsPanel() {
   const [actionFilter, setActionFilter] = useState<string | null>(null)
   const [userFilter, setUserFilter] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
   const queryClient = useQueryClient()
 
   // Fetch users for the filter dropdown
   const { data: usersData } = useQuery({
     queryKey: ['admin', 'users'],
-    queryFn: () => fetch('/api/admin/users', { credentials: 'include' }).then((r) => r.json()) as Promise<{ users: AdminUser[] }>,
+    queryFn: () =>
+      fetch('/api/admin/users', { credentials: 'include' }).then((r) => r.json()) as Promise<{ users: AdminUser[] }>,
   })
 
   const { data, isLoading, refetch, isFetching } = useQuery({
@@ -697,16 +753,25 @@ function UserLogsPanel() {
       const params = new URLSearchParams({ limit: '200' })
       if (actionFilter) params.set('action', actionFilter)
       if (userFilter) params.set('userId', userFilter)
-      return fetch(`/api/admin/logs/audit?${params}`, { credentials: 'include' }).then((r) => r.json()) as Promise<{ logs: AuditLogEntry[] }>
+      return fetch(`/api/admin/logs/audit?${params}`, { credentials: 'include' }).then((r) => r.json()) as Promise<{
+        logs: AuditLogEntry[]
+      }>
     },
   })
 
   const clearLogs = useMutation({
-    mutationFn: () => fetch('/api/admin/logs/audit', { method: 'DELETE', credentials: 'include' }).then((r) => r.json()),
+    mutationFn: () =>
+      fetch('/api/admin/logs/audit', { method: 'DELETE', credentials: 'include' }).then((r) => r.json()),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'logs', 'audit'] }),
   })
 
   const logs = data?.logs ?? []
+  const totalPages = Math.max(1, Math.ceil(logs.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const pagedLogs = logs.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+  useEffect(() => {
+    setPage(1)
+  }, [])
   const userOptions = (usersData?.users ?? []).map((u) => ({ value: u.id, label: `${u.name} (${u.email})` }))
   const actionOptions = Object.entries(actionBadge).map(([key, val]) => ({ value: key, label: val.label }))
 
@@ -716,14 +781,18 @@ function UserLogsPanel() {
         <Group justify="space-between">
           <Group gap="sm">
             <Title order={3}>User Logs</Title>
-            <Badge variant="light" color="gray" size="sm">audit trail</Badge>
+            <Badge variant="light" color="gray" size="sm">
+              audit trail
+            </Badge>
           </Group>
           <Group gap="sm">
             <Tooltip label="Clear all">
               <ActionIcon
                 variant="subtle"
                 color="red"
-                onClick={() => { if (confirm('Hapus semua audit logs?')) clearLogs.mutate() }}
+                onClick={() => {
+                  if (confirm('Hapus semua audit logs?')) clearLogs.mutate()
+                }}
                 loading={clearLogs.isPending}
               >
                 <TbTrash size={16} />
@@ -776,18 +845,22 @@ function UserLogsPanel() {
               {isLoading && (
                 <Table.Tr>
                   <Table.Td colSpan={5}>
-                    <Text ta="center" c="dimmed" py="md">Loading...</Text>
+                    <Text ta="center" c="dimmed" py="md">
+                      Loading...
+                    </Text>
                   </Table.Td>
                 </Table.Tr>
               )}
               {logs.length === 0 && !isLoading && (
                 <Table.Tr>
                   <Table.Td colSpan={5}>
-                    <Text ta="center" c="dimmed" py="md">Belum ada log</Text>
+                    <Text ta="center" c="dimmed" py="md">
+                      Belum ada log
+                    </Text>
                   </Table.Td>
                 </Table.Tr>
               )}
-              {logs.map((log) => {
+              {pagedLogs.map((log) => {
                 const badge = actionBadge[log.action] ?? { color: 'gray', label: log.action }
                 return (
                   <Table.Tr key={log.id}>
@@ -799,11 +872,17 @@ function UserLogsPanel() {
                     <Table.Td>
                       {log.user ? (
                         <div>
-                          <Text size="sm" fw={500}>{log.user.name}</Text>
-                          <Text size="xs" c="dimmed">{log.user.email}</Text>
+                          <Text size="sm" fw={500}>
+                            {log.user.name}
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            {log.user.email}
+                          </Text>
                         </div>
                       ) : (
-                        <Text size="sm" c="dimmed">—</Text>
+                        <Text size="sm" c="dimmed">
+                          —
+                        </Text>
                       )}
                     </Table.Td>
                     <Table.Td>
@@ -812,10 +891,14 @@ function UserLogsPanel() {
                       </Badge>
                     </Table.Td>
                     <Table.Td>
-                      <Text size="xs" c="dimmed" ff="monospace">{log.detail ?? '—'}</Text>
+                      <Text size="xs" c="dimmed" ff="monospace">
+                        {log.detail ?? '—'}
+                      </Text>
                     </Table.Td>
                     <Table.Td>
-                      <Text size="xs" ff="monospace" c="dimmed">{log.ip ?? '—'}</Text>
+                      <Text size="xs" ff="monospace" c="dimmed">
+                        {log.ip ?? '—'}
+                      </Text>
                     </Table.Td>
                   </Table.Tr>
                 )
@@ -823,6 +906,15 @@ function UserLogsPanel() {
             </Table.Tbody>
           </Table>
         </Card>
+
+        {logs.length > PAGE_SIZE && (
+          <Group justify="space-between">
+            <Text size="xs" c="dimmed">
+              {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, logs.length)} of {logs.length}
+            </Text>
+            <Pagination value={safePage} onChange={setPage} total={totalPages} size="sm" />
+          </Group>
+        )}
       </Stack>
     </Container>
   )
@@ -869,49 +961,67 @@ interface ParsedSchema {
 // Custom node for model tables
 function ModelNode({ data }: { data: { label: string; tableName: string; fields: SchemaField[] } }) {
   return (
-    <div style={{
-      background: 'var(--mantine-color-body)',
-      border: '1px solid var(--mantine-color-default-border)',
-      borderRadius: 8,
-      minWidth: 240,
-      fontSize: 12,
-      fontFamily: 'monospace',
-      overflow: 'hidden',
-    }}>
+    <div
+      style={{
+        background: 'var(--mantine-color-body)',
+        border: '1px solid var(--mantine-color-default-border)',
+        borderRadius: 8,
+        minWidth: 240,
+        fontSize: 12,
+        fontFamily: 'monospace',
+        overflow: 'hidden',
+      }}
+    >
       <Handle type="target" position={Position.Left} style={{ background: 'var(--mantine-color-blue-6)' }} />
-      <div style={{
-        padding: '8px 12px',
-        fontWeight: 700,
-        fontSize: 13,
-        borderBottom: '1px solid var(--mantine-color-default-border)',
-        background: 'var(--mantine-color-blue-light)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}>
+      <div
+        style={{
+          padding: '8px 12px',
+          fontWeight: 700,
+          fontSize: 13,
+          borderBottom: '1px solid var(--mantine-color-default-border)',
+          background: 'var(--mantine-color-blue-light)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <span>{data.label}</span>
         <span style={{ fontSize: 10, opacity: 0.6 }}>{data.tableName}</span>
       </div>
       <div style={{ padding: '4px 0' }}>
-        {data.fields.filter((f) => !f.isRelation).map((field) => (
-          <div key={field.name} style={{
-            padding: '3px 12px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            gap: 16,
-            alignItems: 'center',
-          }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              {field.isId && <span style={{ color: 'var(--mantine-color-yellow-6)' }} title="Primary Key">PK</span>}
-              {field.isUnique && !field.isId && <span style={{ color: 'var(--mantine-color-teal-6)' }} title="Unique">UQ</span>}
-              {!field.isId && !field.isUnique && <span style={{ width: 16 }} />}
-              <span>{field.name}</span>
-            </span>
-            <span style={{ opacity: 0.5 }}>
-              {field.type}{field.isOptional ? '?' : ''}
-            </span>
-          </div>
-        ))}
+        {data.fields
+          .filter((f) => !f.isRelation)
+          .map((field) => (
+            <div
+              key={field.name}
+              style={{
+                padding: '3px 12px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: 16,
+                alignItems: 'center',
+              }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                {field.isId && (
+                  <span style={{ color: 'var(--mantine-color-yellow-6)' }} title="Primary Key">
+                    PK
+                  </span>
+                )}
+                {field.isUnique && !field.isId && (
+                  <span style={{ color: 'var(--mantine-color-teal-6)' }} title="Unique">
+                    UQ
+                  </span>
+                )}
+                {!field.isId && !field.isUnique && <span style={{ width: 16 }} />}
+                <span>{field.name}</span>
+              </span>
+              <span style={{ opacity: 0.5 }}>
+                {field.type}
+                {field.isOptional ? '?' : ''}
+              </span>
+            </div>
+          ))}
       </div>
       <Handle type="source" position={Position.Right} style={{ background: 'var(--mantine-color-blue-6)' }} />
     </div>
@@ -920,31 +1030,37 @@ function ModelNode({ data }: { data: { label: string; tableName: string; fields:
 
 function EnumNode({ data }: { data: { label: string; values: string[] } }) {
   return (
-    <div style={{
-      background: 'var(--mantine-color-body)',
-      border: '1px solid var(--mantine-color-default-border)',
-      borderRadius: 8,
-      minWidth: 160,
-      fontSize: 12,
-      fontFamily: 'monospace',
-      overflow: 'hidden',
-    }}>
-      <div style={{
-        padding: '8px 12px',
-        fontWeight: 700,
-        fontSize: 13,
-        borderBottom: '1px solid var(--mantine-color-default-border)',
-        background: 'var(--mantine-color-violet-light)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}>
+    <div
+      style={{
+        background: 'var(--mantine-color-body)',
+        border: '1px solid var(--mantine-color-default-border)',
+        borderRadius: 8,
+        minWidth: 160,
+        fontSize: 12,
+        fontFamily: 'monospace',
+        overflow: 'hidden',
+      }}
+    >
+      <div
+        style={{
+          padding: '8px 12px',
+          fontWeight: 700,
+          fontSize: 13,
+          borderBottom: '1px solid var(--mantine-color-default-border)',
+          background: 'var(--mantine-color-violet-light)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <span>{data.label}</span>
         <span style={{ fontSize: 10, opacity: 0.6 }}>enum</span>
       </div>
       <div style={{ padding: '4px 0' }}>
         {data.values.map((v) => (
-          <div key={v} style={{ padding: '3px 12px' }}>{v}</div>
+          <div key={v} style={{ padding: '3px 12px' }}>
+            {v}
+          </div>
         ))}
       </div>
     </div>
@@ -997,13 +1113,14 @@ function DatabasePanelInner() {
   const qc = useQueryClient()
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ['admin', 'schema'],
-    queryFn: () => fetch('/api/admin/schema', { credentials: 'include' }).then((r) => r.json()) as Promise<{ schema: ParsedSchema }>,
+    queryFn: () =>
+      fetch('/api/admin/schema', { credentials: 'include' }).then((r) => r.json()) as Promise<{ schema: ParsedSchema }>,
   })
 
   const schema = data?.schema
-  const saveTimer = useRef<ReturnType<typeof setTimeout>>()
-  const viewportTimer = useRef<ReturnType<typeof setTimeout>>()
-  const { setViewport, fitView: fitViewDb } = useReactFlow()
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const viewportTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const { fitView: fitViewDb } = useReactFlow()
   const savedViewport = useMemo(() => loadViewport(), [])
 
   const { initialNodes, initialEdges } = useMemo(() => {
@@ -1067,7 +1184,7 @@ function DatabasePanelInner() {
   useEffect(() => {
     setNodes(initialNodes)
     setEdges(initialEdges)
-  }, [initialNodes, initialEdges])
+  }, [initialNodes, initialEdges, setEdges, setNodes])
 
   // Debounced auto-save viewport on pan/zoom
   const handleMoveEnd = useCallback((_event: any, viewport: { x: number; y: number; zoom: number }) => {
@@ -1076,17 +1193,23 @@ function DatabasePanelInner() {
   }, [])
 
   // Debounced auto-save on node drag
-  const handleNodesChange = useCallback((changes: any) => {
-    onNodesChange(changes)
-    clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => {
-      // Read latest nodes from DOM via setNodes callback
-      setNodes((current) => {
-        savePositions(current)
-        return current
-      })
-    }, 500)
-  }, [onNodesChange])
+  const handleNodesChange = useCallback(
+    (changes: any) => {
+      onNodesChange(changes)
+      clearTimeout(saveTimer.current)
+      saveTimer.current = setTimeout(() => {
+        // Read latest nodes from DOM via setNodes callback
+        setNodes((current) => {
+          savePositions(current)
+          return current
+        })
+      }, 500)
+    },
+    [
+      onNodesChange, // Read latest nodes from DOM via setNodes callback
+      setNodes,
+    ],
+  )
 
   if (isLoading) {
     return (
@@ -1113,23 +1236,37 @@ function DatabasePanelInner() {
       <Group justify="space-between" px="md" py="xs">
         <Group gap="sm">
           <Title order={3}>Database Schema</Title>
-          <Badge variant="light" size="sm">{schema.models.length} models</Badge>
-          <Badge variant="light" color="violet" size="sm">{schema.enums.length} enums</Badge>
-          <Badge variant="light" color="blue" size="sm">{schema.relations.length} relations</Badge>
+          <Badge variant="light" size="sm">
+            {schema.models.length} models
+          </Badge>
+          <Badge variant="light" color="violet" size="sm">
+            {schema.enums.length} enums
+          </Badge>
+          <Badge variant="light" color="blue" size="sm">
+            {schema.relations.length} relations
+          </Badge>
         </Group>
-        <LayoutSelector layoutKey={STORAGE_KEY} onLayout={(layout) => {
-          getLayoutedElements(nodes, edges, layout).then(({ nodes: laid }) => {
-            setNodes(laid)
-            localStorage.removeItem(STORAGE_KEY)
-            localStorage.removeItem(VIEWPORT_KEY)
-            const pos: Record<string, { x: number; y: number }> = {}
-            for (const n of laid) pos[n.id] = n.position
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(pos))
-            requestAnimationFrame(() => fitViewDb({ padding: 0.2 }))
-          })
-        }} />
+        <LayoutSelector
+          layoutKey={STORAGE_KEY}
+          onLayout={(layout) => {
+            getLayoutedElements(nodes, edges, layout).then(({ nodes: laid }) => {
+              setNodes(laid)
+              localStorage.removeItem(STORAGE_KEY)
+              localStorage.removeItem(VIEWPORT_KEY)
+              const pos: Record<string, { x: number; y: number }> = {}
+              for (const n of laid) pos[n.id] = n.position
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(pos))
+              requestAnimationFrame(() => fitViewDb({ padding: 0.2 }))
+            })
+          }}
+        />
         <Tooltip label="Reload schema">
-          <ActionIcon variant="subtle" size="sm" loading={isFetching} onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'schema'] })}>
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            loading={isFetching}
+            onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'schema'] })}
+          >
             <TbRefresh size={16} />
           </ActionIcon>
         </Tooltip>
@@ -1145,7 +1282,9 @@ function DatabasePanelInner() {
           defaultViewport={savedViewport ?? undefined}
           fitView={!savedViewport}
           fitViewOptions={{ padding: 0.2 }}
-          minZoom={0.05} maxZoom={5} proOptions={{ hideAttribution: true }}
+          minZoom={0.05}
+          maxZoom={5}
+          proOptions={{ hideAttribution: true }}
         >
           <Background gap={20} size={1} />
           <Controls />
@@ -1158,50 +1297,122 @@ function DatabasePanelInner() {
 // ─── Project Panel ─────────────────────────────────────
 
 interface RouteInfo {
-  method: string; path: string; auth: string; category: string; description: string
+  method: string
+  path: string
+  auth: string
+  category: string
+  description: string
 }
 interface RoutesData {
   routes: RouteInfo[]
-  summary: { total: number; byMethod: Record<string, number>; byAuth: Record<string, number>; byCategory: Record<string, number> }
+  summary: {
+    total: number
+    byMethod: Record<string, number>
+    byAuth: Record<string, number>
+    byCategory: Record<string, number>
+  }
 }
 interface FileInfo {
-  path: string; category: string; lines: number; exports: string[]; imports: { from: string; names: string[] }[]
+  path: string
+  category: string
+  lines: number
+  exports: string[]
+  imports: { from: string; names: string[] }[]
 }
 interface ProjectData {
   files: FileInfo[]
   directories: { path: string; category: string; fileCount: number }[]
-  summary: { totalFiles: number; totalLines: number; totalExports: number; totalImports: number; byCategory: Record<string, number> }
+  summary: {
+    totalFiles: number
+    totalLines: number
+    totalExports: number
+    totalImports: number
+    byCategory: Record<string, number>
+  }
 }
 
-const projectSubViews = ['api-routes', 'file-structure', 'user-flow', 'data-flow', 'env-map', 'test-coverage', 'dependencies', 'migrations', 'sessions', 'live-requests'] as const
+const projectSubViews = [
+  'api-routes',
+  'file-structure',
+  'user-flow',
+  'data-flow',
+  'env-map',
+  'test-coverage',
+  'dependencies',
+  'migrations',
+  'sessions',
+  'live-requests',
+] as const
 type ProjectSubView = (typeof projectSubViews)[number]
 
 const METHOD_COLORS: Record<string, string> = {
-  GET: 'green', POST: 'blue', PUT: 'orange', DELETE: 'red', WS: 'violet', PAGE: 'cyan',
+  GET: 'green',
+  POST: 'blue',
+  PUT: 'orange',
+  DELETE: 'red',
+  WS: 'violet',
+  PAGE: 'cyan',
 }
 const AUTH_COLORS: Record<string, string> = {
-  public: 'gray', authenticated: 'yellow', admin: 'orange', superAdmin: 'red',
+  public: 'gray',
+  authenticated: 'yellow',
+  admin: 'orange',
+  superAdmin: 'red',
 }
 const CATEGORY_COLORS: Record<string, string> = {
-  frontend: 'blue', route: 'blue', auth: 'cyan', admin: 'red', utility: 'gray', realtime: 'violet',
-  backend: 'green', lib: 'violet', hook: 'teal', component: 'indigo', prisma: 'orange',
-  'test-unit': 'yellow', 'test-integration': 'yellow', test: 'yellow', config: 'gray',
+  frontend: 'blue',
+  route: 'blue',
+  auth: 'cyan',
+  admin: 'red',
+  utility: 'gray',
+  realtime: 'violet',
+  backend: 'green',
+  lib: 'violet',
+  hook: 'teal',
+  component: 'indigo',
+  prisma: 'orange',
+  'test-unit': 'yellow',
+  'test-integration': 'yellow',
+  test: 'yellow',
+  config: 'gray',
 }
 
 // ─── Route Node ───────────────────────────────
-function RouteNode({ data }: { data: { method: string; path: string; auth: string; category: string; description: string } }) {
+function RouteNode({
+  data,
+}: {
+  data: { method: string; path: string; auth: string; category: string; description: string }
+}) {
   return (
-    <div style={{ padding: 8, borderRadius: 8, border: '1px solid var(--mantine-color-default-border)', background: 'var(--mantine-color-body)', minWidth: 220 }}>
+    <div
+      style={{
+        padding: 8,
+        borderRadius: 8,
+        border: '1px solid var(--mantine-color-default-border)',
+        background: 'var(--mantine-color-body)',
+        minWidth: 220,
+      }}
+    >
       <Handle type="target" position={Position.Left} style={{ background: 'var(--mantine-color-blue-6)' }} />
       <Handle type="source" position={Position.Right} style={{ background: 'var(--mantine-color-blue-6)' }} />
       <Group gap={6} mb={4}>
-        <Badge size="xs" color={METHOD_COLORS[data.method] || 'gray'} variant="filled">{data.method}</Badge>
-        <Text size="xs" fw={700} ff="monospace">{data.path}</Text>
+        <Badge size="xs" color={METHOD_COLORS[data.method] || 'gray'} variant="filled">
+          {data.method}
+        </Badge>
+        <Text size="xs" fw={700} ff="monospace">
+          {data.path}
+        </Text>
       </Group>
-      <Text size="xs" c="dimmed" lineClamp={1}>{data.description}</Text>
+      <Text size="xs" c="dimmed" lineClamp={1}>
+        {data.description}
+      </Text>
       <Group gap={4} mt={4}>
-        <Badge size="xs" variant="dot" color={AUTH_COLORS[data.auth] || 'gray'}>{data.auth}</Badge>
-        <Badge size="xs" variant="light" color={CATEGORY_COLORS[data.category] || 'gray'}>{data.category}</Badge>
+        <Badge size="xs" variant="dot" color={AUTH_COLORS[data.auth] || 'gray'}>
+          {data.auth}
+        </Badge>
+        <Badge size="xs" variant="light" color={CATEGORY_COLORS[data.category] || 'gray'}>
+          {data.category}
+        </Badge>
       </Group>
     </div>
   )
@@ -1216,27 +1427,64 @@ function openInEditor(relativePath: string) {
   }).catch(() => {})
 }
 
-function FileNode2({ data }: { data: { path: string; category: string; lines: number; exports: string[]; imports: { from: string; names: string[] }[] } }) {
+function FileNode2({
+  data,
+}: {
+  data: {
+    path: string
+    category: string
+    lines: number
+    exports: string[]
+    imports: { from: string; names: string[] }[]
+  }
+}) {
   const name = data.path.split('/').pop() || data.path
   return (
-    <div
-      style={{ padding: 8, borderRadius: 8, border: '1px solid var(--mantine-color-default-border)', background: 'var(--mantine-color-body)', minWidth: 180, cursor: 'pointer' }}
+    <button
+      type="button"
+      style={{
+        padding: 8,
+        borderRadius: 8,
+        border: '1px solid var(--mantine-color-default-border)',
+        background: 'var(--mantine-color-body)',
+        minWidth: 180,
+        cursor: 'pointer',
+        textAlign: 'left',
+        font: 'inherit',
+        color: 'inherit',
+      }}
       onDoubleClick={() => openInEditor(data.path)}
       title="Double-click to open in editor"
     >
       <Handle type="target" position={Position.Left} style={{ background: 'var(--mantine-color-violet-6)' }} />
       <Handle type="source" position={Position.Right} style={{ background: 'var(--mantine-color-violet-6)' }} />
       <Group gap={6} mb={4}>
-        <Badge size="xs" color={CATEGORY_COLORS[data.category] || 'gray'} variant="filled">{data.category}</Badge>
-        <Text size="xs" fw={700} ff="monospace">{name}</Text>
+        <Badge size="xs" color={CATEGORY_COLORS[data.category] || 'gray'} variant="filled">
+          {data.category}
+        </Badge>
+        <Text size="xs" fw={700} ff="monospace">
+          {name}
+        </Text>
       </Group>
-      <Text size="xs" c="dimmed" ff="monospace">{data.path}</Text>
+      <Text size="xs" c="dimmed" ff="monospace">
+        {data.path}
+      </Text>
       <Group gap={8} mt={4}>
-        <Text size="xs" c="dimmed">{data.lines} lines</Text>
-        {data.exports.length > 0 && <Badge size="xs" variant="light" color="green">{data.exports.length} exports</Badge>}
-        {data.imports.length > 0 && <Badge size="xs" variant="light" color="blue">{data.imports.length} imports</Badge>}
+        <Text size="xs" c="dimmed">
+          {data.lines} lines
+        </Text>
+        {data.exports.length > 0 && (
+          <Badge size="xs" variant="light" color="green">
+            {data.exports.length} exports
+          </Badge>
+        )}
+        {data.imports.length > 0 && (
+          <Badge size="xs" variant="light" color="blue">
+            {data.imports.length} imports
+          </Badge>
+        )}
       </Group>
-    </div>
+    </button>
   )
 }
 
@@ -1244,28 +1492,56 @@ function FileNode2({ data }: { data: { path: string; category: string; lines: nu
 function FlowNode({ data }: { data: { label: string; description?: string; color?: string; type?: string } }) {
   const isDiamond = data.type === 'decision'
   return (
-    <div style={{
-      padding: isDiamond ? 12 : 8,
-      borderRadius: isDiamond ? 4 : 8,
-      border: `2px solid var(--mantine-color-${data.color || 'blue'}-6)`,
-      background: 'var(--mantine-color-body)',
-      minWidth: isDiamond ? 120 : 160,
-      transform: isDiamond ? 'rotate(0deg)' : undefined,
-      textAlign: 'center',
-    }}>
-      <Handle type="target" position={Position.Top} style={{ background: `var(--mantine-color-${data.color || 'blue'}-6)` }} />
-      <Handle type="source" position={Position.Bottom} style={{ background: `var(--mantine-color-${data.color || 'blue'}-6)` }} />
-      <Handle type="source" position={Position.Right} id="right" style={{ background: `var(--mantine-color-${data.color || 'blue'}-6)` }} />
-      <Handle type="source" position={Position.Left} id="left" style={{ background: `var(--mantine-color-${data.color || 'blue'}-6)` }} />
-      <Text size="xs" fw={700}>{data.label}</Text>
-      {data.description && <Text size="xs" c="dimmed">{data.description}</Text>}
+    <div
+      style={{
+        padding: isDiamond ? 12 : 8,
+        borderRadius: isDiamond ? 4 : 8,
+        border: `2px solid var(--mantine-color-${data.color || 'blue'}-6)`,
+        background: 'var(--mantine-color-body)',
+        minWidth: isDiamond ? 120 : 160,
+        transform: isDiamond ? 'rotate(0deg)' : undefined,
+        textAlign: 'center',
+      }}
+    >
+      <Handle
+        type="target"
+        position={Position.Top}
+        style={{ background: `var(--mantine-color-${data.color || 'blue'}-6)` }}
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        style={{ background: `var(--mantine-color-${data.color || 'blue'}-6)` }}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right"
+        style={{ background: `var(--mantine-color-${data.color || 'blue'}-6)` }}
+      />
+      <Handle
+        type="source"
+        position={Position.Left}
+        id="left"
+        style={{ background: `var(--mantine-color-${data.color || 'blue'}-6)` }}
+      />
+      <Text size="xs" fw={700}>
+        {data.label}
+      </Text>
+      {data.description && (
+        <Text size="xs" c="dimmed">
+          {data.description}
+        </Text>
+      )}
     </div>
   )
 }
 
 const projectNodeTypes = { route: RouteNode, file: FileNode2, flow: FlowNode }
 
-function storageKey(view: string) { return `dev:project:${view}` }
+function storageKey(view: string) {
+  return `dev:project:${view}`
+}
 
 function ProjectPanel() {
   const [subView, setSubView] = useState<ProjectSubView>('api-routes')
@@ -1280,22 +1556,31 @@ function ProjectPanel() {
           value={subView}
           onChange={(v) => v && setSubView(v as ProjectSubView)}
           data={[
-            { group: 'Architecture', items: [
-              { label: 'API Routes', value: 'api-routes' },
-              { label: 'File Structure', value: 'file-structure' },
-              { label: 'User Flow', value: 'user-flow' },
-              { label: 'Data Flow', value: 'data-flow' },
-            ]},
-            { group: 'DevOps', items: [
-              { label: 'Env Variables', value: 'env-map' },
-              { label: 'Test Coverage', value: 'test-coverage' },
-              { label: 'Dependencies', value: 'dependencies' },
-              { label: 'Migrations', value: 'migrations' },
-            ]},
-            { group: 'Live', items: [
-              { label: 'Sessions', value: 'sessions' },
-              { label: 'Live Requests', value: 'live-requests' },
-            ]},
+            {
+              group: 'Architecture',
+              items: [
+                { label: 'API Routes', value: 'api-routes' },
+                { label: 'File Structure', value: 'file-structure' },
+                { label: 'User Flow', value: 'user-flow' },
+                { label: 'Data Flow', value: 'data-flow' },
+              ],
+            },
+            {
+              group: 'DevOps',
+              items: [
+                { label: 'Env Variables', value: 'env-map' },
+                { label: 'Test Coverage', value: 'test-coverage' },
+                { label: 'Dependencies', value: 'dependencies' },
+                { label: 'Migrations', value: 'migrations' },
+              ],
+            },
+            {
+              group: 'Live',
+              items: [
+                { label: 'Sessions', value: 'sessions' },
+                { label: 'Live Requests', value: 'live-requests' },
+              ],
+            },
           ]}
         />
       </Group>
@@ -1409,7 +1694,11 @@ async function getLayoutedElements(
 }
 
 function savedLayout(key: string): LayoutType {
-  try { return (localStorage.getItem(`${key}:layout`) as LayoutType) || 'horizontal' } catch { return 'horizontal' }
+  try {
+    return (localStorage.getItem(`${key}:layout`) as LayoutType) || 'horizontal'
+  } catch {
+    return 'horizontal'
+  }
 }
 
 function LayoutSelector({ layoutKey, onLayout }: { layoutKey: string; onLayout: (layout: LayoutType) => void }) {
@@ -1421,78 +1710,117 @@ function LayoutSelector({ layoutKey, onLayout }: { layoutKey: string; onLayout: 
     onLayout(l)
   }
   return (
-    <SegmentedControl size="xs" value={layout} onChange={change} data={[
-      { label: '↔ Horizontal', value: 'horizontal' },
-      { label: '↕ Vertical', value: 'vertical' },
-      { label: '◎ Radial', value: 'radial' },
-      { label: '⚡ Force', value: 'force' },
-    ]} />
+    <SegmentedControl
+      size="xs"
+      value={layout}
+      onChange={change}
+      data={[
+        { label: '↔ Horizontal', value: 'horizontal' },
+        { label: '↕ Vertical', value: 'vertical' },
+        { label: '◎ Radial', value: 'radial' },
+        { label: '⚡ Force', value: 'force' },
+      ]}
+    />
   )
 }
 
 // ─── Shared flow hook ─────────────────────────
 function useFlowAutoSave(key: string) {
-  const saveTimer = useRef<ReturnType<typeof setTimeout>>()
-  const vpTimer = useRef<ReturnType<typeof setTimeout>>()
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const vpTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
   const savedVp = useMemo(() => {
-    try { const r = localStorage.getItem(`${key}:viewport`); return r ? JSON.parse(r) : null } catch { return null }
+    try {
+      const r = localStorage.getItem(`${key}:viewport`)
+      return r ? JSON.parse(r) : null
+    } catch {
+      return null
+    }
   }, [key])
   const loadPos = useMemo(() => {
-    try { const r = localStorage.getItem(`${key}:positions`); return r ? JSON.parse(r) as Record<string, { x: number; y: number }> : null } catch { return null }
+    try {
+      const r = localStorage.getItem(`${key}:positions`)
+      return r ? (JSON.parse(r) as Record<string, { x: number; y: number }>) : null
+    } catch {
+      return null
+    }
   }, [key])
 
-  const handleNodesChange = useCallback((changes: any) => {
-    onNodesChange(changes)
-    clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => {
-      setNodes((cur) => {
-        const pos: Record<string, { x: number; y: number }> = {}
-        for (const n of cur) pos[n.id] = n.position
-        localStorage.setItem(`${key}:positions`, JSON.stringify(pos))
-        return cur
-      })
-    }, 500)
-  }, [onNodesChange, key])
+  const handleNodesChange = useCallback(
+    (changes: any) => {
+      onNodesChange(changes)
+      clearTimeout(saveTimer.current)
+      saveTimer.current = setTimeout(() => {
+        setNodes((cur) => {
+          const pos: Record<string, { x: number; y: number }> = {}
+          for (const n of cur) pos[n.id] = n.position
+          localStorage.setItem(`${key}:positions`, JSON.stringify(pos))
+          return cur
+        })
+      }, 500)
+    },
+    [onNodesChange, key, setNodes],
+  )
 
-  const handleMoveEnd = useCallback((_e: any, vp: { x: number; y: number; zoom: number }) => {
-    clearTimeout(vpTimer.current)
-    vpTimer.current = setTimeout(() => localStorage.setItem(`${key}:viewport`, JSON.stringify(vp)), 500)
-  }, [key])
+  const handleMoveEnd = useCallback(
+    (_e: any, vp: { x: number; y: number; zoom: number }) => {
+      clearTimeout(vpTimer.current)
+      vpTimer.current = setTimeout(() => localStorage.setItem(`${key}:viewport`, JSON.stringify(vp)), 500)
+    },
+    [key],
+  )
 
   const { fitView } = useReactFlow()
 
-  const relayout = useCallback((layout: LayoutType) => {
-    const currentNodes = nodes
-    const currentEdges = edges
-    getLayoutedElements(currentNodes, currentEdges, layout).then(({ nodes: laid }) => {
-      setNodes(laid)
-      // Clear saved positions/viewport so layout takes effect
-      localStorage.removeItem(`${key}:positions`)
-      localStorage.removeItem(`${key}:viewport`)
-      // Save new positions
-      const pos: Record<string, { x: number; y: number }> = {}
-      for (const n of laid) pos[n.id] = n.position
-      localStorage.setItem(`${key}:positions`, JSON.stringify(pos))
-      // Fit view after layout settles
-      requestAnimationFrame(() => fitView({ padding: 0.2 }))
-    })
-  }, [key, nodes, edges, fitView])
+  const relayout = useCallback(
+    (layout: LayoutType) => {
+      const currentNodes = nodes
+      const currentEdges = edges
+      getLayoutedElements(currentNodes, currentEdges, layout).then(({ nodes: laid }) => {
+        setNodes(laid)
+        // Clear saved positions/viewport so layout takes effect
+        localStorage.removeItem(`${key}:positions`)
+        localStorage.removeItem(`${key}:viewport`)
+        // Save new positions
+        const pos: Record<string, { x: number; y: number }> = {}
+        for (const n of laid) pos[n.id] = n.position
+        localStorage.setItem(`${key}:positions`, JSON.stringify(pos))
+        // Fit view after layout settles
+        requestAnimationFrame(() => fitView({ padding: 0.2 }))
+      })
+    },
+    [key, nodes, edges, fitView, setNodes],
+  )
 
-  return { nodes, setNodes, edges, setEdges, onEdgesChange, handleNodesChange, handleMoveEnd, savedVp, loadPos, relayout }
+  return {
+    nodes,
+    setNodes,
+    edges,
+    setEdges,
+    onEdgesChange,
+    handleNodesChange,
+    handleMoveEnd,
+    savedVp,
+    loadPos,
+    relayout,
+  }
 }
 
 // ─── API Routes Flow ──────────────────────────
 function ApiRoutesFlow() {
-  return <ReactFlowProvider><ApiRoutesFlowInner /></ReactFlowProvider>
+  return (
+    <ReactFlowProvider>
+      <ApiRoutesFlowInner />
+    </ReactFlowProvider>
+  )
 }
 
 function ApiRoutesFlowInner() {
   const qc = useQueryClient()
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ['admin', 'routes'],
-    queryFn: () => fetch('/api/admin/routes', { credentials: 'include' }).then(r => r.json()) as Promise<RoutesData>,
+    queryFn: () => fetch('/api/admin/routes', { credentials: 'include' }).then((r) => r.json()) as Promise<RoutesData>,
   })
   const flow = useFlowAutoSave(storageKey('api-routes'))
 
@@ -1519,7 +1847,7 @@ function ApiRoutesFlowInner() {
           id,
           type: 'route',
           position: flow.loadPos?.[id] ?? defaultPos,
-          data: r,
+          data: r as unknown as Record<string, unknown>,
         })
       })
       colX += 300
@@ -1547,7 +1875,7 @@ function ApiRoutesFlowInner() {
     ]
 
     for (const [from, to, label] of flowEdges) {
-      if (nodes.find(n => n.id === from) && nodes.find(n => n.id === to)) {
+      if (nodes.find((n) => n.id === from) && nodes.find((n) => n.id === to)) {
         edges.push({
           id: `e_${from}_${to}`,
           source: from,
@@ -1563,24 +1891,45 @@ function ApiRoutesFlowInner() {
 
     flow.setNodes(nodes)
     flow.setEdges(edges)
-  }, [data])
+  }, [data, flow.setEdges, flow.loadPos, flow.setNodes])
 
-  if (isLoading) return <Stack align="center" justify="center" mih={400}><Text c="dimmed">Loading routes...</Text></Stack>
-  if (!data) return <Stack align="center" justify="center" mih={400}><Text c="dimmed">No data</Text></Stack>
+  if (isLoading)
+    return (
+      <Stack align="center" justify="center" mih={400}>
+        <Text c="dimmed">Loading routes...</Text>
+      </Stack>
+    )
+  if (!data)
+    return (
+      <Stack align="center" justify="center" mih={400}>
+        <Text c="dimmed">No data</Text>
+      </Stack>
+    )
 
   return (
     <>
       <Group px="md" pb="xs" gap="sm">
         {Object.entries(data.summary.byMethod).map(([m, c]) => (
-          <Badge key={m} size="sm" variant="light" color={METHOD_COLORS[m] || 'gray'}>{m}: {c}</Badge>
+          <Badge key={m} size="sm" variant="light" color={METHOD_COLORS[m] || 'gray'}>
+            {m}: {c}
+          </Badge>
         ))}
-        <Text size="xs" c="dimmed">|</Text>
+        <Text size="xs" c="dimmed">
+          |
+        </Text>
         {Object.entries(data.summary.byAuth).map(([a, c]) => (
-          <Badge key={a} size="sm" variant="dot" color={AUTH_COLORS[a] || 'gray'}>{a}: {c}</Badge>
+          <Badge key={a} size="sm" variant="dot" color={AUTH_COLORS[a] || 'gray'}>
+            {a}: {c}
+          </Badge>
         ))}
         <LayoutSelector layoutKey={storageKey('api-routes')} onLayout={flow.relayout} />
         <Tooltip label="Reload routes">
-          <ActionIcon variant="subtle" size="sm" loading={isFetching} onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'routes'] })}>
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            loading={isFetching}
+            onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'routes'] })}
+          >
             <TbRefresh size={16} />
           </ActionIcon>
         </Tooltip>
@@ -1596,7 +1945,9 @@ function ApiRoutesFlowInner() {
           defaultViewport={flow.savedVp ?? undefined}
           fitView={!flow.savedVp}
           fitViewOptions={{ padding: 0.2 }}
-          minZoom={0.05} maxZoom={5} proOptions={{ hideAttribution: true }}
+          minZoom={0.05}
+          maxZoom={5}
+          proOptions={{ hideAttribution: true }}
         >
           <Background gap={20} size={1} />
           <Controls />
@@ -1608,22 +1959,35 @@ function ApiRoutesFlowInner() {
 
 // ─── File Structure Flow ──────────────────────
 function FileStructureFlow() {
-  return <ReactFlowProvider><FileStructureFlowInner /></ReactFlowProvider>
+  return (
+    <ReactFlowProvider>
+      <FileStructureFlowInner />
+    </ReactFlowProvider>
+  )
 }
 
 function FileStructureFlowInner() {
   const qc = useQueryClient()
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ['admin', 'project-structure'],
-    queryFn: () => fetch('/api/admin/project-structure', { credentials: 'include' }).then(r => r.json()) as Promise<ProjectData>,
+    queryFn: () =>
+      fetch('/api/admin/project-structure', { credentials: 'include' }).then((r) => r.json()) as Promise<ProjectData>,
   })
   const [filter, setFilter] = useState('all')
   const flow = useFlowAutoSave(storageKey('file-structure'))
 
   useEffect(() => {
     if (!data?.files) return
-    const filtered = filter === 'all' ? data.files : data.files.filter(f => f.category === filter || (filter === 'frontend' && ['route', 'hook', 'component', 'frontend'].includes(f.category)) || (filter === 'test' && f.category.startsWith('test')))
-    const fileSet = new Set(filtered.map(f => f.path))
+    const filtered =
+      filter === 'all'
+        ? data.files
+        : data.files.filter(
+            (f) =>
+              f.category === filter ||
+              (filter === 'frontend' && ['route', 'hook', 'component', 'frontend'].includes(f.category)) ||
+              (filter === 'test' && f.category.startsWith('test')),
+          )
+    const fileSet = new Set(filtered.map((f) => f.path))
     const nodes: Node[] = []
     const edges: Edge[] = []
     const cols = Math.max(3, Math.ceil(Math.sqrt(filtered.length)))
@@ -1636,7 +2000,7 @@ function FileStructureFlowInner() {
         id: f.path,
         type: 'file',
         position: flow.loadPos?.[f.path] ?? defaultPos,
-        data: f,
+        data: f as unknown as Record<string, unknown>,
       })
     })
 
@@ -1659,25 +2023,47 @@ function FileStructureFlowInner() {
 
     flow.setNodes(nodes)
     flow.setEdges(edges)
-  }, [data, filter])
+  }, [data, filter, flow.loadPos, flow.setNodes, flow.setEdges])
 
-  if (isLoading) return <Stack align="center" justify="center" mih={400}><Text c="dimmed">Loading project...</Text></Stack>
-  if (!data) return <Stack align="center" justify="center" mih={400}><Text c="dimmed">No data</Text></Stack>
+  if (isLoading)
+    return (
+      <Stack align="center" justify="center" mih={400}>
+        <Text c="dimmed">Loading project...</Text>
+      </Stack>
+    )
+  if (!data)
+    return (
+      <Stack align="center" justify="center" mih={400}>
+        <Text c="dimmed">No data</Text>
+      </Stack>
+    )
 
   return (
     <>
       <Group px="md" pb="xs" gap="sm">
-        <SegmentedControl size="xs" value={filter} onChange={setFilter} data={[
-          { label: `All (${data.summary.totalFiles})`, value: 'all' },
-          { label: 'Frontend', value: 'frontend' },
-          { label: 'Backend', value: 'backend' },
-          { label: 'Lib', value: 'lib' },
-          { label: 'Tests', value: 'test' },
-        ]} />
-        <Text size="xs" c="dimmed">{data.summary.totalLines} lines | {data.summary.totalExports} exports | {data.summary.totalImports} imports</Text>
+        <SegmentedControl
+          size="xs"
+          value={filter}
+          onChange={setFilter}
+          data={[
+            { label: `All (${data.summary.totalFiles})`, value: 'all' },
+            { label: 'Frontend', value: 'frontend' },
+            { label: 'Backend', value: 'backend' },
+            { label: 'Lib', value: 'lib' },
+            { label: 'Tests', value: 'test' },
+          ]}
+        />
+        <Text size="xs" c="dimmed">
+          {data.summary.totalLines} lines | {data.summary.totalExports} exports | {data.summary.totalImports} imports
+        </Text>
         <LayoutSelector layoutKey={storageKey('file-structure')} onLayout={flow.relayout} />
         <Tooltip label="Reload files">
-          <ActionIcon variant="subtle" size="sm" loading={isFetching} onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'project-structure'] })}>
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            loading={isFetching}
+            onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'project-structure'] })}
+          >
             <TbRefresh size={16} />
           </ActionIcon>
         </Tooltip>
@@ -1693,7 +2079,9 @@ function FileStructureFlowInner() {
           defaultViewport={flow.savedVp ?? undefined}
           fitView={!flow.savedVp}
           fitViewOptions={{ padding: 0.2 }}
-          minZoom={0.05} maxZoom={5} proOptions={{ hideAttribution: true }}
+          minZoom={0.05}
+          maxZoom={5}
+          proOptions={{ hideAttribution: true }}
         >
           <Background gap={20} size={1} />
           <Controls />
@@ -1705,7 +2093,11 @@ function FileStructureFlowInner() {
 
 // ─── User Flow View ───────────────────────────
 function UserFlowView() {
-  return <ReactFlowProvider><UserFlowViewInner /></ReactFlowProvider>
+  return (
+    <ReactFlowProvider>
+      <UserFlowViewInner />
+    </ReactFlowProvider>
+  )
 }
 
 function UserFlowViewInner() {
@@ -1713,11 +2105,24 @@ function UserFlowViewInner() {
 
   useEffect(() => {
     const p = flow.loadPos
-    const n = (id: string, x: number, y: number, label: string, opts?: Partial<{ description: string; color: string; type: string }>) => ({
-      id, type: 'flow' as const, position: p?.[id] ?? { x, y }, data: { label, ...opts },
+    const n = (
+      id: string,
+      x: number,
+      y: number,
+      label: string,
+      opts?: Partial<{ description: string; color: string; type: string }>,
+    ) => ({
+      id,
+      type: 'flow' as const,
+      position: p?.[id] ?? { x, y },
+      data: { label, ...opts },
     })
     const e = (from: string, to: string, label: string, color = 'blue', sourceHandle?: string) => ({
-      id: `e_${from}_${to}_${label}`, source: from, target: to, sourceHandle, label,
+      id: `e_${from}_${to}_${label}`,
+      source: from,
+      target: to,
+      sourceHandle,
+      label,
       labelStyle: { fontSize: 9, fontFamily: 'monospace' } as const,
       style: { stroke: `var(--mantine-color-${color}-4)`, strokeWidth: 1.5 },
       markerEnd: { type: MarkerType.ArrowClosed as const, width: 12, height: 12 },
@@ -1753,15 +2158,23 @@ function UserFlowViewInner() {
       e('blocked', 'logout', 'logout only', 'gray'),
       e('logout', 'login', 'redirect', 'gray'),
     ])
-  }, [])
+  }, [flow.loadPos, flow.setEdges, flow.setNodes])
 
   return (
     <>
       <Group px="md" pb="xs" gap="sm">
-        <Badge size="sm" color="red" variant="light">SUPER_ADMIN → /dev</Badge>
-        <Badge size="sm" color="orange" variant="light">ADMIN → /dashboard</Badge>
-        <Badge size="sm" color="blue" variant="light">USER → /profile</Badge>
-        <Badge size="sm" color="gray" variant="light">Blocked → /blocked</Badge>
+        <Badge size="sm" color="red" variant="light">
+          SUPER_ADMIN → /dev
+        </Badge>
+        <Badge size="sm" color="orange" variant="light">
+          ADMIN → /dashboard
+        </Badge>
+        <Badge size="sm" color="blue" variant="light">
+          USER → /profile
+        </Badge>
+        <Badge size="sm" color="gray" variant="light">
+          Blocked → /blocked
+        </Badge>
         <LayoutSelector layoutKey={storageKey('user-flow')} onLayout={flow.relayout} />
       </Group>
       <div style={{ flex: 1 }}>
@@ -1775,7 +2188,9 @@ function UserFlowViewInner() {
           defaultViewport={flow.savedVp ?? undefined}
           fitView={!flow.savedVp}
           fitViewOptions={{ padding: 0.2 }}
-          minZoom={0.05} maxZoom={5} proOptions={{ hideAttribution: true }}
+          minZoom={0.05}
+          maxZoom={5}
+          proOptions={{ hideAttribution: true }}
         >
           <Background gap={20} size={1} />
           <Controls />
@@ -1787,7 +2202,11 @@ function UserFlowViewInner() {
 
 // ─── Data Flow View ───────────────────────────
 function DataFlowView() {
-  return <ReactFlowProvider><DataFlowViewInner /></ReactFlowProvider>
+  return (
+    <ReactFlowProvider>
+      <DataFlowViewInner />
+    </ReactFlowProvider>
+  )
 }
 
 function DataFlowViewInner() {
@@ -1795,11 +2214,24 @@ function DataFlowViewInner() {
 
   useEffect(() => {
     const p = flow.loadPos
-    const n = (id: string, x: number, y: number, label: string, opts?: Partial<{ description: string; color: string; type: string }>) => ({
-      id, type: 'flow' as const, position: p?.[id] ?? { x, y }, data: { label, ...opts },
+    const n = (
+      id: string,
+      x: number,
+      y: number,
+      label: string,
+      opts?: Partial<{ description: string; color: string; type: string }>,
+    ) => ({
+      id,
+      type: 'flow' as const,
+      position: p?.[id] ?? { x, y },
+      data: { label, ...opts },
     })
     const e = (from: string, to: string, label: string, color = 'blue', sourceHandle?: string) => ({
-      id: `e_${from}_${to}_${label}`, source: from, target: to, sourceHandle, label,
+      id: `e_${from}_${to}_${label}`,
+      source: from,
+      target: to,
+      sourceHandle,
+      label,
       labelStyle: { fontSize: 9, fontFamily: 'monospace' } as const,
       style: { stroke: `var(--mantine-color-${color}-4)`, strokeWidth: 1.5 },
       markerEnd: { type: MarkerType.ArrowClosed as const, width: 12, height: 12 },
@@ -1812,9 +2244,17 @@ function DataFlowViewInner() {
       n('elysia', 250, 100, 'Elysia Server', { color: 'green', description: 'Route matching' }),
       n('log-hook', 500, 100, 'onAfterResponse', { color: 'gray', description: 'Request logging' }),
       n('app-log', 700, 100, 'App Log (Redis)', { color: 'red', description: 'Ring buffer, max 500' }),
-      n('auth-mw', 250, 200, 'Auth Check', { color: 'yellow', type: 'decision', description: 'Session cookie → DB lookup' }),
+      n('auth-mw', 250, 200, 'Auth Check', {
+        color: 'yellow',
+        type: 'decision',
+        description: 'Session cookie → DB lookup',
+      }),
       n('401', 500, 200, '401 Unauthorized', { color: 'red' }),
-      n('role-guard', 250, 310, 'Role Guard', { color: 'orange', type: 'decision', description: 'SUPER_ADMIN / ADMIN / USER' }),
+      n('role-guard', 250, 310, 'Role Guard', {
+        color: 'orange',
+        type: 'decision',
+        description: 'SUPER_ADMIN / ADMIN / USER',
+      }),
       n('403', 500, 310, '403 Forbidden', { color: 'red' }),
       n('handler', 250, 420, 'Route Handler', { color: 'green', description: 'Business logic' }),
       n('prisma', 100, 530, 'Prisma (PostgreSQL)', { color: 'orange', description: 'User, Session, AuditLog' }),
@@ -1855,17 +2295,29 @@ function DataFlowViewInner() {
       e('handler', 'audit-event', 'auth events', 'orange', 'left'),
       e('audit-event', 'audit-db', 'INSERT', 'orange'),
     ])
-  }, [])
+  }, [flow.setEdges, flow.loadPos, flow.setNodes])
 
   return (
     <>
       <Group px="md" pb="xs" gap="sm">
-        <Badge size="sm" color="cyan" variant="light">Client</Badge>
-        <Badge size="sm" color="green" variant="light">Server</Badge>
-        <Badge size="sm" color="yellow" variant="light">Auth</Badge>
-        <Badge size="sm" color="orange" variant="light">Database</Badge>
-        <Badge size="sm" color="red" variant="light">Redis</Badge>
-        <Badge size="sm" color="violet" variant="light">WebSocket</Badge>
+        <Badge size="sm" color="cyan" variant="light">
+          Client
+        </Badge>
+        <Badge size="sm" color="green" variant="light">
+          Server
+        </Badge>
+        <Badge size="sm" color="yellow" variant="light">
+          Auth
+        </Badge>
+        <Badge size="sm" color="orange" variant="light">
+          Database
+        </Badge>
+        <Badge size="sm" color="red" variant="light">
+          Redis
+        </Badge>
+        <Badge size="sm" color="violet" variant="light">
+          WebSocket
+        </Badge>
         <LayoutSelector layoutKey={storageKey('data-flow')} onLayout={flow.relayout} />
       </Group>
       <div style={{ flex: 1 }}>
@@ -1879,7 +2331,9 @@ function DataFlowViewInner() {
           defaultViewport={flow.savedVp ?? undefined}
           fitView={!flow.savedVp}
           fitViewOptions={{ padding: 0.2 }}
-          minZoom={0.05} maxZoom={5} proOptions={{ hideAttribution: true }}
+          minZoom={0.05}
+          maxZoom={5}
+          proOptions={{ hideAttribution: true }}
         >
           <Background gap={20} size={1} />
           <Controls />
@@ -1891,8 +2345,13 @@ function DataFlowViewInner() {
 
 // ─── Env Map Flow ─────────────────────────────────
 interface EnvVar {
-  name: string; required: boolean; isSet: boolean; default: string | null
-  category: string; description: string; usedBy: string[]
+  name: string
+  required: boolean
+  isSet: boolean
+  default: string | null
+  category: string
+  description: string
+  usedBy: string[]
 }
 interface EnvMapData {
   variables: EnvVar[]
@@ -1901,18 +2360,40 @@ interface EnvMapData {
 
 function EnvVarNode({ data }: { data: EnvVar }) {
   return (
-    <div style={{ padding: 8, borderRadius: 8, border: `2px solid var(--mantine-color-${data.isSet ? 'green' : 'red'}-6)`, background: 'var(--mantine-color-body)', minWidth: 200 }}>
+    <div
+      style={{
+        padding: 8,
+        borderRadius: 8,
+        border: `2px solid var(--mantine-color-${data.isSet ? 'green' : 'red'}-6)`,
+        background: 'var(--mantine-color-body)',
+        minWidth: 200,
+      }}
+    >
       <Handle type="target" position={Position.Left} style={{ background: 'var(--mantine-color-green-6)' }} />
       <Handle type="source" position={Position.Right} style={{ background: 'var(--mantine-color-green-6)' }} />
       <Group gap={6} mb={4}>
-        <Badge size="xs" color={data.required ? 'red' : 'gray'} variant="filled">{data.required ? 'required' : 'optional'}</Badge>
-        <Badge size="xs" color={CATEGORY_COLORS[data.category] || 'gray'} variant="light">{data.category}</Badge>
+        <Badge size="xs" color={data.required ? 'red' : 'gray'} variant="filled">
+          {data.required ? 'required' : 'optional'}
+        </Badge>
+        <Badge size="xs" color={CATEGORY_COLORS[data.category] || 'gray'} variant="light">
+          {data.category}
+        </Badge>
       </Group>
-      <Text size="xs" fw={700} ff="monospace">{data.name}</Text>
-      <Text size="xs" c="dimmed">{data.description}</Text>
+      <Text size="xs" fw={700} ff="monospace">
+        {data.name}
+      </Text>
+      <Text size="xs" c="dimmed">
+        {data.description}
+      </Text>
       <Group gap={6} mt={4}>
-        <Badge size="xs" color={data.isSet ? 'green' : 'red'} variant="dot">{data.isSet ? 'set' : 'unset'}</Badge>
-        {data.default && <Text size="xs" c="dimmed">default: {data.default}</Text>}
+        <Badge size="xs" color={data.isSet ? 'green' : 'red'} variant="dot">
+          {data.isSet ? 'set' : 'unset'}
+        </Badge>
+        {data.default && (
+          <Text size="xs" c="dimmed">
+            default: {data.default}
+          </Text>
+        )}
       </Group>
     </div>
   )
@@ -1921,14 +2402,18 @@ function EnvVarNode({ data }: { data: EnvVar }) {
 const envNodeTypes = { envVar: EnvVarNode, file: FileNode2 }
 
 function EnvMapFlow() {
-  return <ReactFlowProvider><EnvMapFlowInner /></ReactFlowProvider>
+  return (
+    <ReactFlowProvider>
+      <EnvMapFlowInner />
+    </ReactFlowProvider>
+  )
 }
 
 function EnvMapFlowInner() {
   const qc = useQueryClient()
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ['admin', 'env-map'],
-    queryFn: () => fetch('/api/admin/env-map', { credentials: 'include' }).then(r => r.json()) as Promise<EnvMapData>,
+    queryFn: () => fetch('/api/admin/env-map', { credentials: 'include' }).then((r) => r.json()) as Promise<EnvMapData>,
   })
   const flow = useFlowAutoSave(storageKey('env-map'))
 
@@ -1941,9 +2426,14 @@ function EnvMapFlowInner() {
 
     let colX = 0
     for (const cat of categories) {
-      const vars = data.variables.filter(v => v.category === cat)
+      const vars = data.variables.filter((v) => v.category === cat)
       vars.forEach((v, i) => {
-        nodes.push({ id: `env_${v.name}`, type: 'envVar', position: flow.loadPos?.[`env_${v.name}`] ?? { x: colX, y: i * 120 }, data: v })
+        nodes.push({
+          id: `env_${v.name}`,
+          type: 'envVar',
+          position: flow.loadPos?.[`env_${v.name}`] ?? { x: colX, y: i * 120 },
+          data: v as unknown as Record<string, unknown>,
+        })
         for (const file of v.usedBy) consumerFiles.add(file)
       })
       colX += 300
@@ -1954,7 +2444,8 @@ function EnvMapFlowInner() {
     fileArr.forEach((file, i) => {
       const id = `file_${file}`
       nodes.push({
-        id, type: 'file',
+        id,
+        type: 'file',
         position: flow.loadPos?.[id] ?? { x: colX, y: i * 120 },
         data: { path: file, category: 'backend', lines: 0, exports: [], imports: [] },
       })
@@ -1964,7 +2455,9 @@ function EnvMapFlowInner() {
     for (const v of data.variables) {
       for (const file of v.usedBy) {
         edges.push({
-          id: `env_${v.name}_${file}`, source: `env_${v.name}`, target: `file_${file}`,
+          id: `env_${v.name}_${file}`,
+          source: `env_${v.name}`,
+          target: `file_${file}`,
           style: { stroke: 'var(--mantine-color-green-4)', strokeWidth: 1 },
           markerEnd: { type: MarkerType.ArrowClosed, width: 10, height: 10 },
         })
@@ -1973,24 +2466,65 @@ function EnvMapFlowInner() {
 
     flow.setNodes(nodes)
     flow.setEdges(edges)
-  }, [data])
+  }, [data, flow.setNodes, flow.setEdges, flow.loadPos])
 
-  if (isLoading) return <Stack align="center" justify="center" mih={400}><Text c="dimmed">Loading env map...</Text></Stack>
-  if (!data) return <Stack align="center" justify="center" mih={400}><Text c="dimmed">No data</Text></Stack>
+  if (isLoading)
+    return (
+      <Stack align="center" justify="center" mih={400}>
+        <Text c="dimmed">Loading env map...</Text>
+      </Stack>
+    )
+  if (!data)
+    return (
+      <Stack align="center" justify="center" mih={400}>
+        <Text c="dimmed">No data</Text>
+      </Stack>
+    )
 
   return (
     <>
       <Group px="md" pb="xs" gap="sm">
-        <Badge size="sm" color="green" variant="light">Set: {data.summary.set}</Badge>
-        <Badge size="sm" color="red" variant="light">Unset: {data.summary.unset}</Badge>
-        <Badge size="sm" color="orange" variant="light">Required: {data.summary.required}</Badge>
-        <Text size="xs" c="dimmed">Total: {data.summary.total}</Text>
+        <Badge size="sm" color="green" variant="light">
+          Set: {data.summary.set}
+        </Badge>
+        <Badge size="sm" color="red" variant="light">
+          Unset: {data.summary.unset}
+        </Badge>
+        <Badge size="sm" color="orange" variant="light">
+          Required: {data.summary.required}
+        </Badge>
+        <Text size="xs" c="dimmed">
+          Total: {data.summary.total}
+        </Text>
         <LayoutSelector layoutKey={storageKey('env-map')} onLayout={flow.relayout} />
-        <Tooltip label="Reload"><ActionIcon variant="subtle" size="sm" loading={isFetching} onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'env-map'] })}><TbRefresh size={16} /></ActionIcon></Tooltip>
+        <Tooltip label="Reload">
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            loading={isFetching}
+            onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'env-map'] })}
+          >
+            <TbRefresh size={16} />
+          </ActionIcon>
+        </Tooltip>
       </Group>
       <div style={{ flex: 1 }}>
-        <ReactFlow nodes={flow.nodes} edges={flow.edges} onNodesChange={flow.handleNodesChange} onEdgesChange={flow.onEdgesChange} onMoveEnd={flow.handleMoveEnd} nodeTypes={envNodeTypes} defaultViewport={flow.savedVp ?? undefined} fitView={!flow.savedVp} fitViewOptions={{ padding: 0.2 }} minZoom={0.05} maxZoom={5} proOptions={{ hideAttribution: true }}>
-          <Background gap={20} size={1} /><Controls />
+        <ReactFlow
+          nodes={flow.nodes}
+          edges={flow.edges}
+          onNodesChange={flow.handleNodesChange}
+          onEdgesChange={flow.onEdgesChange}
+          onMoveEnd={flow.handleMoveEnd}
+          nodeTypes={envNodeTypes}
+          defaultViewport={flow.savedVp ?? undefined}
+          fitView={!flow.savedVp}
+          fitViewOptions={{ padding: 0.2 }}
+          minZoom={0.05}
+          maxZoom={5}
+          proOptions={{ hideAttribution: true }}
+        >
+          <Background gap={20} size={1} />
+          <Controls />
         </ReactFlow>
       </div>
     </>
@@ -2001,31 +2535,63 @@ function EnvMapFlowInner() {
 interface TestCoverageData {
   sourceFiles: { path: string; lines: number; exports: string[]; testedBy: string[]; coverage: string }[]
   testFiles: { path: string; lines: number; type: string; targets: string[] }[]
-  summary: { totalSource: number; totalTests: number; covered: number; partial: number; uncovered: number; coveragePercent: number }
+  summary: {
+    totalSource: number
+    totalTests: number
+    covered: number
+    partial: number
+    uncovered: number
+    coveragePercent: number
+  }
 }
 
 const COVERAGE_COLORS: Record<string, string> = { covered: 'green', partial: 'yellow', uncovered: 'red' }
 
-function SourceNode({ data }: { data: { path: string; lines: number; exports: string[]; coverage: string; testedBy: string[] } }) {
+function SourceNode({
+  data,
+}: {
+  data: { path: string; lines: number; exports: string[]; coverage: string; testedBy: string[] }
+}) {
   const name = data.path.split('/').pop() || data.path
   return (
-    <div
-      style={{ padding: 8, borderRadius: 8, border: `2px solid var(--mantine-color-${COVERAGE_COLORS[data.coverage] || 'gray'}-6)`, background: 'var(--mantine-color-body)', minWidth: 180, cursor: 'pointer' }}
+    <button
+      type="button"
+      style={{
+        padding: 8,
+        borderRadius: 8,
+        border: `2px solid var(--mantine-color-${COVERAGE_COLORS[data.coverage] || 'gray'}-6)`,
+        background: 'var(--mantine-color-body)',
+        minWidth: 180,
+        cursor: 'pointer',
+        textAlign: 'left',
+        font: 'inherit',
+        color: 'inherit',
+      }}
       onDoubleClick={() => openInEditor(data.path)}
       title="Double-click to open in editor"
     >
       <Handle type="target" position={Position.Right} style={{ background: 'var(--mantine-color-green-6)' }} />
       <Handle type="source" position={Position.Left} style={{ background: 'var(--mantine-color-green-6)' }} />
       <Group gap={6} mb={4}>
-        <Badge size="xs" color={COVERAGE_COLORS[data.coverage] || 'gray'} variant="filled">{data.coverage}</Badge>
-        <Text size="xs" fw={700} ff="monospace">{name}</Text>
+        <Badge size="xs" color={COVERAGE_COLORS[data.coverage] || 'gray'} variant="filled">
+          {data.coverage}
+        </Badge>
+        <Text size="xs" fw={700} ff="monospace">
+          {name}
+        </Text>
       </Group>
-      <Text size="xs" c="dimmed" ff="monospace">{data.path}</Text>
+      <Text size="xs" c="dimmed" ff="monospace">
+        {data.path}
+      </Text>
       <Group gap={8} mt={4}>
-        <Text size="xs" c="dimmed">{data.lines} lines</Text>
-        <Badge size="xs" variant="light" color="green">{data.exports.length} exports</Badge>
+        <Text size="xs" c="dimmed">
+          {data.lines} lines
+        </Text>
+        <Badge size="xs" variant="light" color="green">
+          {data.exports.length} exports
+        </Badge>
       </Group>
-    </div>
+    </button>
   )
 }
 
@@ -2033,40 +2599,62 @@ function TestNodeComp({ data }: { data: { path: string; lines: number; type: str
   const name = data.path.split('/').pop() || data.path
   const typeColor = data.type === 'unit' ? 'blue' : data.type === 'integration' ? 'green' : 'violet'
   return (
-    <div
-      style={{ padding: 8, borderRadius: 8, border: `1px solid var(--mantine-color-${typeColor}-6)`, background: 'var(--mantine-color-body)', minWidth: 180, cursor: 'pointer' }}
+    <button
+      type="button"
+      style={{
+        padding: 8,
+        borderRadius: 8,
+        border: `1px solid var(--mantine-color-${typeColor}-6)`,
+        background: 'var(--mantine-color-body)',
+        minWidth: 180,
+        cursor: 'pointer',
+        textAlign: 'left',
+        font: 'inherit',
+        color: 'inherit',
+      }}
       onDoubleClick={() => openInEditor(data.path)}
       title="Double-click to open in editor"
     >
       <Handle type="target" position={Position.Left} style={{ background: `var(--mantine-color-${typeColor}-6)` }} />
       <Handle type="source" position={Position.Right} style={{ background: `var(--mantine-color-${typeColor}-6)` }} />
       <Group gap={6} mb={4}>
-        <Badge size="xs" color={typeColor} variant="filled">{data.type}</Badge>
-        <Text size="xs" fw={700} ff="monospace">{name}</Text>
+        <Badge size="xs" color={typeColor} variant="filled">
+          {data.type}
+        </Badge>
+        <Text size="xs" fw={700} ff="monospace">
+          {name}
+        </Text>
       </Group>
-      <Text size="xs" c="dimmed">{data.lines} lines</Text>
-    </div>
+      <Text size="xs" c="dimmed">
+        {data.lines} lines
+      </Text>
+    </button>
   )
 }
 
 const testNodeTypes = { source: SourceNode, test: TestNodeComp }
 
 function TestCoverageFlow() {
-  return <ReactFlowProvider><TestCoverageFlowInner /></ReactFlowProvider>
+  return (
+    <ReactFlowProvider>
+      <TestCoverageFlowInner />
+    </ReactFlowProvider>
+  )
 }
 
 function TestCoverageFlowInner() {
   const qc = useQueryClient()
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ['admin', 'test-coverage'],
-    queryFn: () => fetch('/api/admin/test-coverage', { credentials: 'include' }).then(r => r.json()) as Promise<TestCoverageData>,
+    queryFn: () =>
+      fetch('/api/admin/test-coverage', { credentials: 'include' }).then((r) => r.json()) as Promise<TestCoverageData>,
   })
   const [filter, setFilter] = useState('all')
   const flow = useFlowAutoSave(storageKey('test-coverage'))
 
   useEffect(() => {
     if (!data?.sourceFiles) return
-    const filtered = filter === 'all' ? data.sourceFiles : data.sourceFiles.filter(f => f.coverage === filter)
+    const filtered = filter === 'all' ? data.sourceFiles : data.sourceFiles.filter((f) => f.coverage === filter)
     const nodes: Node[] = []
     const edges: Edge[] = []
 
@@ -2078,7 +2666,7 @@ function TestCoverageFlowInner() {
     // Test files on right
     const testSet = new Set<string>()
     for (const f of filtered) for (const t of f.testedBy) testSet.add(t)
-    const tests = data.testFiles.filter(t => testSet.has(t.path))
+    const tests = data.testFiles.filter((t) => testSet.has(t.path))
     tests.forEach((t, i) => {
       nodes.push({ id: t.path, type: 'test', position: flow.loadPos?.[t.path] ?? { x: 500, y: i * 100 }, data: t })
     })
@@ -2086,9 +2674,11 @@ function TestCoverageFlowInner() {
     // Edges: test → source
     for (const t of tests) {
       for (const target of t.targets) {
-        if (filtered.some(f => f.path === target)) {
+        if (filtered.some((f) => f.path === target)) {
           edges.push({
-            id: `test_${t.path}_${target}`, source: t.path, target,
+            id: `test_${t.path}_${target}`,
+            source: t.path,
+            target,
             style: { stroke: 'var(--mantine-color-green-4)', strokeWidth: 1 },
             markerEnd: { type: MarkerType.ArrowClosed, width: 10, height: 10 },
             animated: true,
@@ -2099,30 +2689,74 @@ function TestCoverageFlowInner() {
 
     flow.setNodes(nodes)
     flow.setEdges(edges)
-  }, [data, filter])
+  }, [data, filter, flow.loadPos, flow.setNodes, flow.setEdges])
 
-  if (isLoading) return <Stack align="center" justify="center" mih={400}><Text c="dimmed">Loading coverage...</Text></Stack>
-  if (!data) return <Stack align="center" justify="center" mih={400}><Text c="dimmed">No data</Text></Stack>
+  if (isLoading)
+    return (
+      <Stack align="center" justify="center" mih={400}>
+        <Text c="dimmed">Loading coverage...</Text>
+      </Stack>
+    )
+  if (!data)
+    return (
+      <Stack align="center" justify="center" mih={400}>
+        <Text c="dimmed">No data</Text>
+      </Stack>
+    )
 
   return (
     <>
       <Group px="md" pb="xs" gap="sm">
-        <SegmentedControl size="xs" value={filter} onChange={setFilter} data={[
-          { label: `All (${data.summary.totalSource})`, value: 'all' },
-          { label: `Covered (${data.summary.covered})`, value: 'covered' },
-          { label: `Partial (${data.summary.partial})`, value: 'partial' },
-          { label: `Uncovered (${data.summary.uncovered})`, value: 'uncovered' },
-        ]} />
-        <Badge size="sm" color={data.summary.coveragePercent >= 70 ? 'green' : data.summary.coveragePercent >= 40 ? 'yellow' : 'red'} variant="light">
+        <SegmentedControl
+          size="xs"
+          value={filter}
+          onChange={setFilter}
+          data={[
+            { label: `All (${data.summary.totalSource})`, value: 'all' },
+            { label: `Covered (${data.summary.covered})`, value: 'covered' },
+            { label: `Partial (${data.summary.partial})`, value: 'partial' },
+            { label: `Uncovered (${data.summary.uncovered})`, value: 'uncovered' },
+          ]}
+        />
+        <Badge
+          size="sm"
+          color={data.summary.coveragePercent >= 70 ? 'green' : data.summary.coveragePercent >= 40 ? 'yellow' : 'red'}
+          variant="light"
+        >
           {data.summary.coveragePercent}% coverage
         </Badge>
-        <Text size="xs" c="dimmed">{data.summary.totalTests} test files</Text>
+        <Text size="xs" c="dimmed">
+          {data.summary.totalTests} test files
+        </Text>
         <LayoutSelector layoutKey={storageKey('test-coverage')} onLayout={flow.relayout} />
-        <Tooltip label="Reload"><ActionIcon variant="subtle" size="sm" loading={isFetching} onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'test-coverage'] })}><TbRefresh size={16} /></ActionIcon></Tooltip>
+        <Tooltip label="Reload">
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            loading={isFetching}
+            onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'test-coverage'] })}
+          >
+            <TbRefresh size={16} />
+          </ActionIcon>
+        </Tooltip>
       </Group>
       <div style={{ flex: 1 }}>
-        <ReactFlow nodes={flow.nodes} edges={flow.edges} onNodesChange={flow.handleNodesChange} onEdgesChange={flow.onEdgesChange} onMoveEnd={flow.handleMoveEnd} nodeTypes={testNodeTypes} defaultViewport={flow.savedVp ?? undefined} fitView={!flow.savedVp} fitViewOptions={{ padding: 0.2 }} minZoom={0.05} maxZoom={5} proOptions={{ hideAttribution: true }}>
-          <Background gap={20} size={1} /><Controls />
+        <ReactFlow
+          nodes={flow.nodes}
+          edges={flow.edges}
+          onNodesChange={flow.handleNodesChange}
+          onEdgesChange={flow.onEdgesChange}
+          onMoveEnd={flow.handleMoveEnd}
+          nodeTypes={testNodeTypes}
+          defaultViewport={flow.savedVp ?? undefined}
+          fitView={!flow.savedVp}
+          fitViewOptions={{ padding: 0.2 }}
+          minZoom={0.05}
+          maxZoom={5}
+          proOptions={{ hideAttribution: true }}
+        >
+          <Background gap={20} size={1} />
+          <Controls />
         </ReactFlow>
       </div>
     </>
@@ -2135,18 +2769,42 @@ interface DepData {
   summary: { total: number; runtime: number; dev: number; byCategory: Record<string, number> }
 }
 
-function PackageNode({ data }: { data: { name: string; version: string; type: string; category: string; usedBy: string[] } }) {
+function PackageNode({
+  data,
+}: {
+  data: { name: string; version: string; type: string; category: string; usedBy: string[] }
+}) {
   return (
-    <div style={{ padding: 8, borderRadius: 8, border: `1px solid var(--mantine-color-${data.type === 'runtime' ? 'green' : 'orange'}-6)`, background: 'var(--mantine-color-body)', minWidth: 180 }}>
+    <div
+      style={{
+        padding: 8,
+        borderRadius: 8,
+        border: `1px solid var(--mantine-color-${data.type === 'runtime' ? 'green' : 'orange'}-6)`,
+        background: 'var(--mantine-color-body)',
+        minWidth: 180,
+      }}
+    >
       <Handle type="target" position={Position.Left} style={{ background: 'var(--mantine-color-blue-6)' }} />
       <Handle type="source" position={Position.Right} style={{ background: 'var(--mantine-color-blue-6)' }} />
       <Group gap={6} mb={4}>
-        <Badge size="xs" color={data.type === 'runtime' ? 'green' : 'orange'} variant="filled">{data.type}</Badge>
-        <Badge size="xs" color={CATEGORY_COLORS[data.category] || 'gray'} variant="light">{data.category}</Badge>
+        <Badge size="xs" color={data.type === 'runtime' ? 'green' : 'orange'} variant="filled">
+          {data.type}
+        </Badge>
+        <Badge size="xs" color={CATEGORY_COLORS[data.category] || 'gray'} variant="light">
+          {data.category}
+        </Badge>
       </Group>
-      <Text size="xs" fw={700} ff="monospace">{data.name}</Text>
-      <Text size="xs" c="dimmed">{data.version}</Text>
-      {data.usedBy.length > 0 && <Badge size="xs" variant="light" mt={4}>{data.usedBy.length} files</Badge>}
+      <Text size="xs" fw={700} ff="monospace">
+        {data.name}
+      </Text>
+      <Text size="xs" c="dimmed">
+        {data.version}
+      </Text>
+      {data.usedBy.length > 0 && (
+        <Badge size="xs" variant="light" mt={4}>
+          {data.usedBy.length} files
+        </Badge>
+      )}
     </div>
   )
 }
@@ -2154,28 +2812,33 @@ function PackageNode({ data }: { data: { name: string; version: string; type: st
 const depNodeTypes = { package: PackageNode, file: FileNode2 }
 
 function DependenciesFlow() {
-  return <ReactFlowProvider><DependenciesFlowInner /></ReactFlowProvider>
+  return (
+    <ReactFlowProvider>
+      <DependenciesFlowInner />
+    </ReactFlowProvider>
+  )
 }
 
 function DependenciesFlowInner() {
   const qc = useQueryClient()
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ['admin', 'dependencies'],
-    queryFn: () => fetch('/api/admin/dependencies', { credentials: 'include' }).then(r => r.json()) as Promise<DepData>,
+    queryFn: () =>
+      fetch('/api/admin/dependencies', { credentials: 'include' }).then((r) => r.json()) as Promise<DepData>,
   })
   const [filter, setFilter] = useState('all')
   const flow = useFlowAutoSave(storageKey('dependencies'))
 
   useEffect(() => {
     if (!data?.packages) return
-    const filtered = filter === 'all' ? data.packages : data.packages.filter(p => p.type === filter)
+    const filtered = filter === 'all' ? data.packages : data.packages.filter((p) => p.type === filter)
     const nodes: Node[] = []
     const edges: Edge[] = []
-    const categories = [...new Set(filtered.map(p => p.category))]
+    const categories = [...new Set(filtered.map((p) => p.category))]
     let colX = 0
 
     for (const cat of categories) {
-      const pkgs = filtered.filter(p => p.category === cat)
+      const pkgs = filtered.filter((p) => p.category === cat)
       pkgs.forEach((p, i) => {
         const id = `pkg_${p.name}`
         nodes.push({ id, type: 'package', position: flow.loadPos?.[id] ?? { x: colX, y: i * 110 }, data: p })
@@ -2189,14 +2852,21 @@ function DependenciesFlowInner() {
     const files = Array.from(consumerFiles)
     files.forEach((f, i) => {
       const id = `file_${f}`
-      nodes.push({ id, type: 'file', position: flow.loadPos?.[id] ?? { x: colX, y: i * 110 }, data: { path: f, category: 'backend', lines: 0, exports: [], imports: [] } })
+      nodes.push({
+        id,
+        type: 'file',
+        position: flow.loadPos?.[id] ?? { x: colX, y: i * 110 },
+        data: { path: f, category: 'backend', lines: 0, exports: [], imports: [] },
+      })
     })
 
     // Edges
     for (const p of filtered) {
       for (const f of p.usedBy) {
         edges.push({
-          id: `dep_${p.name}_${f}`, source: `pkg_${p.name}`, target: `file_${f}`,
+          id: `dep_${p.name}_${f}`,
+          source: `pkg_${p.name}`,
+          target: `file_${f}`,
           style: { stroke: 'var(--mantine-color-blue-4)', strokeWidth: 1 },
           markerEnd: { type: MarkerType.ArrowClosed, width: 10, height: 10 },
         })
@@ -2205,28 +2875,68 @@ function DependenciesFlowInner() {
 
     flow.setNodes(nodes)
     flow.setEdges(edges)
-  }, [data, filter])
+  }, [data, filter, flow.setEdges, flow.loadPos, flow.setNodes])
 
-  if (isLoading) return <Stack align="center" justify="center" mih={400}><Text c="dimmed">Loading dependencies...</Text></Stack>
-  if (!data) return <Stack align="center" justify="center" mih={400}><Text c="dimmed">No data</Text></Stack>
+  if (isLoading)
+    return (
+      <Stack align="center" justify="center" mih={400}>
+        <Text c="dimmed">Loading dependencies...</Text>
+      </Stack>
+    )
+  if (!data)
+    return (
+      <Stack align="center" justify="center" mih={400}>
+        <Text c="dimmed">No data</Text>
+      </Stack>
+    )
 
   return (
     <>
       <Group px="md" pb="xs" gap="sm">
-        <SegmentedControl size="xs" value={filter} onChange={setFilter} data={[
-          { label: `All (${data.summary.total})`, value: 'all' },
-          { label: `Runtime (${data.summary.runtime})`, value: 'runtime' },
-          { label: `Dev (${data.summary.dev})`, value: 'dev' },
-        ]} />
+        <SegmentedControl
+          size="xs"
+          value={filter}
+          onChange={setFilter}
+          data={[
+            { label: `All (${data.summary.total})`, value: 'all' },
+            { label: `Runtime (${data.summary.runtime})`, value: 'runtime' },
+            { label: `Dev (${data.summary.dev})`, value: 'dev' },
+          ]}
+        />
         {Object.entries(data.summary.byCategory).map(([c, n]) => (
-          <Badge key={c} size="sm" variant="light" color={CATEGORY_COLORS[c] || 'gray'}>{c}: {n}</Badge>
+          <Badge key={c} size="sm" variant="light" color={CATEGORY_COLORS[c] || 'gray'}>
+            {c}: {n}
+          </Badge>
         ))}
         <LayoutSelector layoutKey={storageKey('dependencies')} onLayout={flow.relayout} />
-        <Tooltip label="Reload"><ActionIcon variant="subtle" size="sm" loading={isFetching} onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'dependencies'] })}><TbRefresh size={16} /></ActionIcon></Tooltip>
+        <Tooltip label="Reload">
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            loading={isFetching}
+            onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'dependencies'] })}
+          >
+            <TbRefresh size={16} />
+          </ActionIcon>
+        </Tooltip>
       </Group>
       <div style={{ flex: 1 }}>
-        <ReactFlow nodes={flow.nodes} edges={flow.edges} onNodesChange={flow.handleNodesChange} onEdgesChange={flow.onEdgesChange} onMoveEnd={flow.handleMoveEnd} nodeTypes={depNodeTypes} defaultViewport={flow.savedVp ?? undefined} fitView={!flow.savedVp} fitViewOptions={{ padding: 0.2 }} minZoom={0.05} maxZoom={5} proOptions={{ hideAttribution: true }}>
-          <Background gap={20} size={1} /><Controls />
+        <ReactFlow
+          nodes={flow.nodes}
+          edges={flow.edges}
+          onNodesChange={flow.handleNodesChange}
+          onEdgesChange={flow.onEdgesChange}
+          onMoveEnd={flow.handleMoveEnd}
+          nodeTypes={depNodeTypes}
+          defaultViewport={flow.savedVp ?? undefined}
+          fitView={!flow.savedVp}
+          fitViewOptions={{ padding: 0.2 }}
+          minZoom={0.05}
+          maxZoom={5}
+          proOptions={{ hideAttribution: true }}
+        >
+          <Background gap={20} size={1} />
+          <Controls />
         </ReactFlow>
       </div>
     </>
@@ -2236,30 +2946,70 @@ function DependenciesFlowInner() {
 // ─── Migrations Flow ──────────────────────────
 interface MigrationData {
   migrations: { name: string; folder: string; createdAt: string; changes: string[]; sql: string }[]
-  summary: { totalMigrations: number; firstMigration: string | null; lastMigration: string | null; totalChanges: number }
+  summary: {
+    totalMigrations: number
+    firstMigration: string | null
+    lastMigration: string | null
+    totalChanges: number
+  }
 }
 
 function MigrationNode({ data }: { data: { name: string; createdAt: string; changes: string[]; sql: string } }) {
   const [showSql, setShowSql] = useState(false)
   const date = new Date(data.createdAt).toLocaleDateString()
   return (
-    <div style={{ padding: 10, borderRadius: 8, border: '1px solid var(--mantine-color-default-border)', background: 'var(--mantine-color-body)', minWidth: 220, maxWidth: 260 }}>
+    <div
+      style={{
+        padding: 10,
+        borderRadius: 8,
+        border: '1px solid var(--mantine-color-default-border)',
+        background: 'var(--mantine-color-body)',
+        minWidth: 220,
+        maxWidth: 260,
+      }}
+    >
       <Handle type="target" position={Position.Left} style={{ background: 'var(--mantine-color-orange-6)' }} />
       <Handle type="source" position={Position.Right} style={{ background: 'var(--mantine-color-orange-6)' }} />
       <Group gap={6} mb={4}>
-        <Badge size="xs" color="orange" variant="filled">{date}</Badge>
+        <Badge size="xs" color="orange" variant="filled">
+          {date}
+        </Badge>
       </Group>
-      <Text size="xs" fw={700} ff="monospace" lineClamp={1}>{data.name}</Text>
+      <Text size="xs" fw={700} ff="monospace" lineClamp={1}>
+        {data.name}
+      </Text>
       <Stack gap={2} mt={4}>
-        {data.changes.map((c, i) => {
-          const color = c.startsWith('CREATE') ? 'green' : c.startsWith('ALTER') ? 'yellow' : c.startsWith('DROP') ? 'red' : 'gray'
-          return <Badge key={i} size="xs" variant="light" color={color} ff="monospace">{c}</Badge>
+        {data.changes.map((c) => {
+          const color = c.startsWith('CREATE')
+            ? 'green'
+            : c.startsWith('ALTER')
+              ? 'yellow'
+              : c.startsWith('DROP')
+                ? 'red'
+                : 'gray'
+          return (
+            <Badge key={c} size="xs" variant="light" color={color} ff="monospace">
+              {c}
+            </Badge>
+          )
         })}
       </Stack>
       {data.sql && (
-        <Text size="xs" c="blue" mt={4} style={{ cursor: 'pointer' }} onClick={() => setShowSql(!showSql)}>{showSql ? 'Hide SQL' : 'Show SQL'}</Text>
+        <Text size="xs" c="blue" mt={4} style={{ cursor: 'pointer' }} onClick={() => setShowSql(!showSql)}>
+          {showSql ? 'Hide SQL' : 'Show SQL'}
+        </Text>
       )}
-      {showSql && <Text size="xs" ff="monospace" c="dimmed" mt={4} style={{ whiteSpace: 'pre-wrap', maxHeight: 200, overflow: 'auto' }}>{data.sql}</Text>}
+      {showSql && (
+        <Text
+          size="xs"
+          ff="monospace"
+          c="dimmed"
+          mt={4}
+          style={{ whiteSpace: 'pre-wrap', maxHeight: 200, overflow: 'auto' }}
+        >
+          {data.sql}
+        </Text>
+      )}
     </div>
   )
 }
@@ -2267,14 +3017,19 @@ function MigrationNode({ data }: { data: { name: string; createdAt: string; chan
 const migrationNodeTypes = { migration: MigrationNode }
 
 function MigrationsFlow() {
-  return <ReactFlowProvider><MigrationsFlowInner /></ReactFlowProvider>
+  return (
+    <ReactFlowProvider>
+      <MigrationsFlowInner />
+    </ReactFlowProvider>
+  )
 }
 
 function MigrationsFlowInner() {
   const qc = useQueryClient()
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ['admin', 'migrations'],
-    queryFn: () => fetch('/api/admin/migrations', { credentials: 'include' }).then(r => r.json()) as Promise<MigrationData>,
+    queryFn: () =>
+      fetch('/api/admin/migrations', { credentials: 'include' }).then((r) => r.json()) as Promise<MigrationData>,
   })
   const flow = useFlowAutoSave(storageKey('migrations'))
 
@@ -2289,7 +3044,9 @@ function MigrationsFlowInner() {
       if (i > 0) {
         const prevId = `mig_${data.migrations[i - 1].folder}`
         edges.push({
-          id: `mig_e_${i}`, source: prevId, target: id,
+          id: `mig_e_${i}`,
+          source: prevId,
+          target: id,
           label: `#${i + 1}`,
           labelStyle: { fontSize: 9 },
           style: { stroke: 'var(--mantine-color-orange-4)', strokeWidth: 2 },
@@ -2301,23 +3058,65 @@ function MigrationsFlowInner() {
 
     flow.setNodes(nodes)
     flow.setEdges(edges)
-  }, [data])
+  }, [data, flow.loadPos, flow.setNodes, flow.setEdges])
 
-  if (isLoading) return <Stack align="center" justify="center" mih={400}><Text c="dimmed">Loading migrations...</Text></Stack>
-  if (!data) return <Stack align="center" justify="center" mih={400}><Text c="dimmed">No data</Text></Stack>
+  if (isLoading)
+    return (
+      <Stack align="center" justify="center" mih={400}>
+        <Text c="dimmed">Loading migrations...</Text>
+      </Stack>
+    )
+  if (!data)
+    return (
+      <Stack align="center" justify="center" mih={400}>
+        <Text c="dimmed">No data</Text>
+      </Stack>
+    )
 
   return (
     <>
       <Group px="md" pb="xs" gap="sm">
-        <Badge size="sm" color="orange" variant="light">{data.summary.totalMigrations} migrations</Badge>
-        <Badge size="sm" variant="light">{data.summary.totalChanges} changes</Badge>
-        {data.summary.firstMigration && <Text size="xs" c="dimmed">From {new Date(data.summary.firstMigration).toLocaleDateString()} → {new Date(data.summary.lastMigration!).toLocaleDateString()}</Text>}
+        <Badge size="sm" color="orange" variant="light">
+          {data.summary.totalMigrations} migrations
+        </Badge>
+        <Badge size="sm" variant="light">
+          {data.summary.totalChanges} changes
+        </Badge>
+        {data.summary.firstMigration && (
+          <Text size="xs" c="dimmed">
+            From {new Date(data.summary.firstMigration).toLocaleDateString()} →{' '}
+            {new Date(data.summary.lastMigration!).toLocaleDateString()}
+          </Text>
+        )}
         <LayoutSelector layoutKey={storageKey('migrations')} onLayout={flow.relayout} />
-        <Tooltip label="Reload"><ActionIcon variant="subtle" size="sm" loading={isFetching} onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'migrations'] })}><TbRefresh size={16} /></ActionIcon></Tooltip>
+        <Tooltip label="Reload">
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            loading={isFetching}
+            onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'migrations'] })}
+          >
+            <TbRefresh size={16} />
+          </ActionIcon>
+        </Tooltip>
       </Group>
       <div style={{ flex: 1 }}>
-        <ReactFlow nodes={flow.nodes} edges={flow.edges} onNodesChange={flow.handleNodesChange} onEdgesChange={flow.onEdgesChange} onMoveEnd={flow.handleMoveEnd} nodeTypes={migrationNodeTypes} defaultViewport={flow.savedVp ?? undefined} fitView={!flow.savedVp} fitViewOptions={{ padding: 0.2 }} minZoom={0.05} maxZoom={5} proOptions={{ hideAttribution: true }}>
-          <Background gap={20} size={1} /><Controls />
+        <ReactFlow
+          nodes={flow.nodes}
+          edges={flow.edges}
+          onNodesChange={flow.handleNodesChange}
+          onEdgesChange={flow.onEdgesChange}
+          onMoveEnd={flow.handleMoveEnd}
+          nodeTypes={migrationNodeTypes}
+          defaultViewport={flow.savedVp ?? undefined}
+          fitView={!flow.savedVp}
+          fitViewOptions={{ padding: 0.2 }}
+          minZoom={0.05}
+          maxZoom={5}
+          proOptions={{ hideAttribution: true }}
+        >
+          <Background gap={20} size={1} />
+          <Controls />
         </ReactFlow>
       </div>
     </>
@@ -2326,24 +3125,80 @@ function MigrationsFlowInner() {
 
 // ─── Sessions Flow ────────────────────────────
 interface SessionData {
-  sessions: { id: string; userId: string; userName: string; userEmail: string; userRole: string; userBlocked: boolean; isOnline: boolean; createdAt: string; expiresAt: string; isExpired: boolean }[]
-  summary: { totalSessions: number; activeSessions: number; expiredSessions: number; onlineUsers: number; byRole: Record<string, number> }
+  sessions: {
+    id: string
+    userId: string
+    userName: string
+    userEmail: string
+    userRole: string
+    userBlocked: boolean
+    isOnline: boolean
+    createdAt: string
+    expiresAt: string
+    isExpired: boolean
+  }[]
+  summary: {
+    totalSessions: number
+    activeSessions: number
+    expiredSessions: number
+    onlineUsers: number
+    byRole: Record<string, number>
+  }
 }
 
-function SessionUserNode({ data }: { data: { userName: string; userEmail: string; userRole: string; userBlocked: boolean; isOnline: boolean; sessionCount: number; isExpired: boolean } }) {
+function SessionUserNode({
+  data,
+}: {
+  data: {
+    userName: string
+    userEmail: string
+    userRole: string
+    userBlocked: boolean
+    isOnline: boolean
+    sessionCount: number
+    isExpired: boolean
+  }
+}) {
   const roleColor = data.userRole === 'SUPER_ADMIN' ? 'red' : data.userRole === 'ADMIN' ? 'orange' : 'blue'
   return (
-    <div style={{ padding: 8, borderRadius: 8, border: `2px solid var(--mantine-color-${data.userBlocked ? 'red' : roleColor}-6)`, background: 'var(--mantine-color-body)', minWidth: 180 }}>
+    <div
+      style={{
+        padding: 8,
+        borderRadius: 8,
+        border: `2px solid var(--mantine-color-${data.userBlocked ? 'red' : roleColor}-6)`,
+        background: 'var(--mantine-color-body)',
+        minWidth: 180,
+      }}
+    >
       <Handle type="source" position={Position.Right} style={{ background: `var(--mantine-color-${roleColor}-6)` }} />
       <Group gap={6} mb={4}>
-        <div style={{ width: 8, height: 8, borderRadius: '50%', background: `var(--mantine-color-${data.isOnline ? 'green' : 'gray'}-6)` }} />
-        <Text size="xs" fw={700}>{data.userName}</Text>
+        <div
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            background: `var(--mantine-color-${data.isOnline ? 'green' : 'gray'}-6)`,
+          }}
+        />
+        <Text size="xs" fw={700}>
+          {data.userName}
+        </Text>
       </Group>
-      <Text size="xs" c="dimmed">{data.userEmail}</Text>
+      <Text size="xs" c="dimmed">
+        {data.userEmail}
+      </Text>
       <Group gap={4} mt={4}>
-        <Badge size="xs" color={roleColor} variant="filled">{data.userRole}</Badge>
-        {data.userBlocked && <Badge size="xs" color="red" variant="filled">BLOCKED</Badge>}
-        <Badge size="xs" variant="light">{data.sessionCount} sessions</Badge>
+        <Badge size="xs" color={roleColor} variant="filled">
+          {data.userRole}
+        </Badge>
+        {data.userBlocked && (
+          <Badge size="xs" color="red" variant="filled">
+            BLOCKED
+          </Badge>
+        )}
+        <Badge size="xs" variant="light">
+          {data.sessionCount} sessions
+        </Badge>
       </Group>
     </div>
   )
@@ -2351,13 +3206,29 @@ function SessionUserNode({ data }: { data: { userName: string; userEmail: string
 
 function RoleAccessNode({ data }: { data: { label: string; routes: string[]; color: string; count: number } }) {
   return (
-    <div style={{ padding: 8, borderRadius: 8, border: `2px solid var(--mantine-color-${data.color}-6)`, background: 'var(--mantine-color-body)', minWidth: 150 }}>
+    <div
+      style={{
+        padding: 8,
+        borderRadius: 8,
+        border: `2px solid var(--mantine-color-${data.color}-6)`,
+        background: 'var(--mantine-color-body)',
+        minWidth: 150,
+      }}
+    >
       <Handle type="target" position={Position.Left} style={{ background: `var(--mantine-color-${data.color}-6)` }} />
       <Handle type="source" position={Position.Right} style={{ background: `var(--mantine-color-${data.color}-6)` }} />
-      <Text size="xs" fw={700}>{data.label}</Text>
-      <Badge size="xs" variant="light" color={data.color} mt={4}>{data.count} users</Badge>
+      <Text size="xs" fw={700}>
+        {data.label}
+      </Text>
+      <Badge size="xs" variant="light" color={data.color} mt={4}>
+        {data.count} users
+      </Badge>
       <Stack gap={2} mt={4}>
-        {data.routes.map(r => <Text key={r} size="xs" c="dimmed" ff="monospace">{r}</Text>)}
+        {data.routes.map((r) => (
+          <Text key={r} size="xs" c="dimmed" ff="monospace">
+            {r}
+          </Text>
+        ))}
       </Stack>
     </div>
   )
@@ -2366,14 +3237,19 @@ function RoleAccessNode({ data }: { data: { label: string; routes: string[]; col
 const sessionNodeTypes = { sessionUser: SessionUserNode, roleAccess: RoleAccessNode }
 
 function SessionsFlow() {
-  return <ReactFlowProvider><SessionsFlowInner /></ReactFlowProvider>
+  return (
+    <ReactFlowProvider>
+      <SessionsFlowInner />
+    </ReactFlowProvider>
+  )
 }
 
 function SessionsFlowInner() {
   const qc = useQueryClient()
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ['admin', 'sessions'],
-    queryFn: () => fetch('/api/admin/sessions', { credentials: 'include' }).then(r => r.json()) as Promise<SessionData>,
+    queryFn: () =>
+      fetch('/api/admin/sessions', { credentials: 'include' }).then((r) => r.json()) as Promise<SessionData>,
     refetchInterval: 10000,
   })
   const flow = useFlowAutoSave(storageKey('sessions'))
@@ -2395,9 +3271,10 @@ function SessionsFlowInner() {
       const first = sessions[0]
       const id = `user_${userId}`
       nodes.push({
-        id, type: 'sessionUser',
+        id,
+        type: 'sessionUser',
         position: flow.loadPos?.[id] ?? { x: 0, y: userY },
-        data: { ...first, sessionCount: sessions.length, isExpired: sessions.every(s => s.isExpired) },
+        data: { ...first, sessionCount: sessions.length, isExpired: sessions.every((s) => s.isExpired) },
       })
       userY += 100
     }
@@ -2412,7 +3289,8 @@ function SessionsFlowInner() {
     roles.forEach((r, i) => {
       const id = `role_${r.role}`
       nodes.push({
-        id, type: 'roleAccess',
+        id,
+        type: 'roleAccess',
         position: flow.loadPos?.[id] ?? { x: 350, y: i * 150 },
         data: { label: r.role, routes: r.routes, color: r.color, count: data.summary.byRole[r.role] || 0 },
       })
@@ -2422,33 +3300,79 @@ function SessionsFlowInner() {
     for (const [userId, sessions] of userMap) {
       const role = sessions[0].userRole
       edges.push({
-        id: `sess_${userId}_${role}`, source: `user_${userId}`, target: `role_${role}`,
-        style: { stroke: `var(--mantine-color-${role === 'SUPER_ADMIN' ? 'red' : role === 'ADMIN' ? 'orange' : 'blue'}-4)`, strokeWidth: 1.5 },
+        id: `sess_${userId}_${role}`,
+        source: `user_${userId}`,
+        target: `role_${role}`,
+        style: {
+          stroke: `var(--mantine-color-${role === 'SUPER_ADMIN' ? 'red' : role === 'ADMIN' ? 'orange' : 'blue'}-4)`,
+          strokeWidth: 1.5,
+        },
         markerEnd: { type: MarkerType.ArrowClosed, width: 10, height: 10 },
-        animated: sessions.some(s => s.isOnline),
+        animated: sessions.some((s) => s.isOnline),
       })
     }
 
     flow.setNodes(nodes)
     flow.setEdges(edges)
-  }, [data])
+  }, [data, flow.setNodes, flow.setEdges, flow.loadPos])
 
-  if (isLoading) return <Stack align="center" justify="center" mih={400}><Text c="dimmed">Loading sessions...</Text></Stack>
-  if (!data) return <Stack align="center" justify="center" mih={400}><Text c="dimmed">No data</Text></Stack>
+  if (isLoading)
+    return (
+      <Stack align="center" justify="center" mih={400}>
+        <Text c="dimmed">Loading sessions...</Text>
+      </Stack>
+    )
+  if (!data)
+    return (
+      <Stack align="center" justify="center" mih={400}>
+        <Text c="dimmed">No data</Text>
+      </Stack>
+    )
 
   return (
     <>
       <Group px="md" pb="xs" gap="sm">
-        <Badge size="sm" color="green" variant="light">Active: {data.summary.activeSessions}</Badge>
-        <Badge size="sm" color="gray" variant="light">Expired: {data.summary.expiredSessions}</Badge>
-        <Badge size="sm" color="teal" variant="light">Online: {data.summary.onlineUsers}</Badge>
-        <Text size="xs" c="dimmed">Auto-refresh 10s</Text>
+        <Badge size="sm" color="green" variant="light">
+          Active: {data.summary.activeSessions}
+        </Badge>
+        <Badge size="sm" color="gray" variant="light">
+          Expired: {data.summary.expiredSessions}
+        </Badge>
+        <Badge size="sm" color="teal" variant="light">
+          Online: {data.summary.onlineUsers}
+        </Badge>
+        <Text size="xs" c="dimmed">
+          Auto-refresh 10s
+        </Text>
         <LayoutSelector layoutKey={storageKey('sessions')} onLayout={flow.relayout} />
-        <Tooltip label="Reload"><ActionIcon variant="subtle" size="sm" loading={isFetching} onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'sessions'] })}><TbRefresh size={16} /></ActionIcon></Tooltip>
+        <Tooltip label="Reload">
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            loading={isFetching}
+            onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'sessions'] })}
+          >
+            <TbRefresh size={16} />
+          </ActionIcon>
+        </Tooltip>
       </Group>
       <div style={{ flex: 1 }}>
-        <ReactFlow nodes={flow.nodes} edges={flow.edges} onNodesChange={flow.handleNodesChange} onEdgesChange={flow.onEdgesChange} onMoveEnd={flow.handleMoveEnd} nodeTypes={sessionNodeTypes} defaultViewport={flow.savedVp ?? undefined} fitView={!flow.savedVp} fitViewOptions={{ padding: 0.2 }} minZoom={0.05} maxZoom={5} proOptions={{ hideAttribution: true }}>
-          <Background gap={20} size={1} /><Controls />
+        <ReactFlow
+          nodes={flow.nodes}
+          edges={flow.edges}
+          onNodesChange={flow.handleNodesChange}
+          onEdgesChange={flow.onEdgesChange}
+          onMoveEnd={flow.handleMoveEnd}
+          nodeTypes={sessionNodeTypes}
+          defaultViewport={flow.savedVp ?? undefined}
+          fitView={!flow.savedVp}
+          fitViewOptions={{ padding: 0.2 }}
+          minZoom={0.05}
+          maxZoom={5}
+          proOptions={{ hideAttribution: true }}
+        >
+          <Background gap={20} size={1} />
+          <Controls />
         </ReactFlow>
       </div>
     </>
@@ -2456,21 +3380,53 @@ function SessionsFlowInner() {
 }
 
 // ─── Live Requests Flow ───────────────────────
-interface RequestEvent { method: string; path: string; status: number; duration: number; timestamp: string }
+interface RequestEvent {
+  method: string
+  path: string
+  status: number
+  duration: number
+  timestamp: string
+}
 
-function EndpointHitNode({ data }: { data: { method: string; path: string; hits: number; lastStatus: number; avgDuration: number } }) {
+function EndpointHitNode({
+  data,
+}: {
+  data: { method: string; path: string; hits: number; lastStatus: number; avgDuration: number }
+}) {
   const statusColor = data.lastStatus >= 500 ? 'red' : data.lastStatus >= 400 ? 'yellow' : 'green'
   return (
-    <div style={{ padding: 8, borderRadius: 8, border: `2px solid var(--mantine-color-${statusColor}-6)`, background: 'var(--mantine-color-body)', minWidth: 200, boxShadow: data.hits > 0 ? `0 0 ${Math.min(data.hits * 2, 20)}px var(--mantine-color-${statusColor}-3)` : undefined }}>
+    <div
+      style={{
+        padding: 8,
+        borderRadius: 8,
+        border: `2px solid var(--mantine-color-${statusColor}-6)`,
+        background: 'var(--mantine-color-body)',
+        minWidth: 200,
+        boxShadow:
+          data.hits > 0 ? `0 0 ${Math.min(data.hits * 2, 20)}px var(--mantine-color-${statusColor}-3)` : undefined,
+      }}
+    >
       <Handle type="target" position={Position.Left} style={{ background: `var(--mantine-color-${statusColor}-6)` }} />
       <Group gap={6} mb={4}>
-        <Badge size="xs" color={METHOD_COLORS[data.method] || 'gray'} variant="filled">{data.method}</Badge>
-        <Text size="xs" fw={700} ff="monospace">{data.path}</Text>
+        <Badge size="xs" color={METHOD_COLORS[data.method] || 'gray'} variant="filled">
+          {data.method}
+        </Badge>
+        <Text size="xs" fw={700} ff="monospace">
+          {data.path}
+        </Text>
       </Group>
       <Group gap={8}>
-        <Badge size="xs" variant="light" color={statusColor}>{data.lastStatus || '—'}</Badge>
-        <Text size="xs" c="dimmed">{data.hits} hits</Text>
-        {data.avgDuration > 0 && <Text size="xs" c="dimmed">{data.avgDuration}ms avg</Text>}
+        <Badge size="xs" variant="light" color={statusColor}>
+          {data.lastStatus || '—'}
+        </Badge>
+        <Text size="xs" c="dimmed">
+          {data.hits} hits
+        </Text>
+        {data.avgDuration > 0 && (
+          <Text size="xs" c="dimmed">
+            {data.avgDuration}ms avg
+          </Text>
+        )}
       </Group>
     </div>
   )
@@ -2479,7 +3435,11 @@ function EndpointHitNode({ data }: { data: { method: string; path: string; hits:
 const liveNodeTypes = { endpoint: EndpointHitNode, flow: FlowNode }
 
 function LiveRequestsFlow() {
-  return <ReactFlowProvider><LiveRequestsFlowInner /></ReactFlowProvider>
+  return (
+    <ReactFlowProvider>
+      <LiveRequestsFlowInner />
+    </ReactFlowProvider>
+  )
 }
 
 function LiveRequestsFlowInner() {
@@ -2500,7 +3460,7 @@ function LiveRequestsFlowInner() {
         const msg = JSON.parse(e.data)
         if (msg.type === 'request' && !pausedRef.current) {
           const evt: RequestEvent = msg
-          setEvents(prev => [...prev.slice(-99), evt])
+          setEvents((prev) => [...prev.slice(-99), evt])
 
           // Update stats
           const key = `${evt.method}_${evt.path}`
@@ -2523,8 +3483,9 @@ function LiveRequestsFlowInner() {
 
     // Server node
     nodes.push({
-      id: 'server', type: 'flow',
-      position: flow.loadPos?.['server'] ?? { x: 0, y: 200 },
+      id: 'server',
+      type: 'flow',
+      position: flow.loadPos?.server ?? { x: 0, y: 200 },
       data: { label: 'Elysia Server', color: 'green', description: `${events.length} requests captured` },
     })
 
@@ -2533,13 +3494,25 @@ function LiveRequestsFlowInner() {
       const [method, ...pathParts] = key.split('_')
       const path = pathParts.join('_')
       nodes.push({
-        id: key, type: 'endpoint',
+        id: key,
+        type: 'endpoint',
         position: flow.loadPos?.[key] ?? { x: 350, y: i * 80 },
-        data: { method, path, hits: stat.hits, lastStatus: stat.lastStatus, avgDuration: Math.round(stat.totalDuration / stat.hits) },
+        data: {
+          method,
+          path,
+          hits: stat.hits,
+          lastStatus: stat.lastStatus,
+          avgDuration: Math.round(stat.totalDuration / stat.hits),
+        },
       })
       edges.push({
-        id: `live_${key}`, source: 'server', target: key,
-        style: { stroke: `var(--mantine-color-${stat.lastStatus >= 500 ? 'red' : stat.lastStatus >= 400 ? 'yellow' : 'green'}-4)`, strokeWidth: Math.min(1 + stat.hits * 0.3, 5) },
+        id: `live_${key}`,
+        source: 'server',
+        target: key,
+        style: {
+          stroke: `var(--mantine-color-${stat.lastStatus >= 500 ? 'red' : stat.lastStatus >= 400 ? 'yellow' : 'green'}-4)`,
+          strokeWidth: Math.min(1 + stat.hits * 0.3, 5),
+        },
         markerEnd: { type: MarkerType.ArrowClosed, width: 10, height: 10 },
         animated: true,
       })
@@ -2547,29 +3520,65 @@ function LiveRequestsFlowInner() {
 
     flow.setNodes(nodes)
     flow.setEdges(edges)
-  }, [events])
+  }, [events, flow.loadPos?.server, flow.setNodes, flow.setEdges, flow.loadPos])
 
   const totalHits = Array.from(statsRef.current.values()).reduce((s, v) => s + v.hits, 0)
-  const errorCount = Array.from(statsRef.current.values()).filter(v => v.lastStatus >= 400).length
+  const errorCount = Array.from(statsRef.current.values()).filter((v) => v.lastStatus >= 400).length
 
   return (
     <>
       <Group px="md" pb="xs" gap="sm">
-        <Badge size="sm" color="green" variant="light">{totalHits} requests</Badge>
-        <Badge size="sm" color="blue" variant="light">{statsRef.current.size} endpoints</Badge>
-        {errorCount > 0 && <Badge size="sm" color="red" variant="light">{errorCount} errors</Badge>}
-        <ActionIcon variant={paused ? 'filled' : 'subtle'} size="sm" color={paused ? 'red' : 'green'} onClick={() => setPaused(!paused)}>
+        <Badge size="sm" color="green" variant="light">
+          {totalHits} requests
+        </Badge>
+        <Badge size="sm" color="blue" variant="light">
+          {statsRef.current.size} endpoints
+        </Badge>
+        {errorCount > 0 && (
+          <Badge size="sm" color="red" variant="light">
+            {errorCount} errors
+          </Badge>
+        )}
+        <ActionIcon
+          variant={paused ? 'filled' : 'subtle'}
+          size="sm"
+          color={paused ? 'red' : 'green'}
+          onClick={() => setPaused(!paused)}
+        >
           {paused ? <TbCircleFilled size={12} /> : <TbWifi size={16} />}
         </ActionIcon>
-        <Text size="xs" c="dimmed">{paused ? 'Paused' : 'Live'}</Text>
-        <ActionIcon variant="subtle" size="sm" onClick={() => { statsRef.current.clear(); setEvents([]) }}>
+        <Text size="xs" c="dimmed">
+          {paused ? 'Paused' : 'Live'}
+        </Text>
+        <ActionIcon
+          variant="subtle"
+          size="sm"
+          onClick={() => {
+            statsRef.current.clear()
+            setEvents([])
+          }}
+        >
           <TbTrash size={16} />
         </ActionIcon>
         <LayoutSelector layoutKey={storageKey('live-requests')} onLayout={flow.relayout} />
       </Group>
       <div style={{ flex: 1 }}>
-        <ReactFlow nodes={flow.nodes} edges={flow.edges} onNodesChange={flow.handleNodesChange} onEdgesChange={flow.onEdgesChange} onMoveEnd={flow.handleMoveEnd} nodeTypes={liveNodeTypes} defaultViewport={flow.savedVp ?? undefined} fitView={!flow.savedVp} fitViewOptions={{ padding: 0.2 }} minZoom={0.05} maxZoom={5} proOptions={{ hideAttribution: true }}>
-          <Background gap={20} size={1} /><Controls />
+        <ReactFlow
+          nodes={flow.nodes}
+          edges={flow.edges}
+          onNodesChange={flow.handleNodesChange}
+          onEdgesChange={flow.onEdgesChange}
+          onMoveEnd={flow.handleMoveEnd}
+          nodeTypes={liveNodeTypes}
+          defaultViewport={flow.savedVp ?? undefined}
+          fitView={!flow.savedVp}
+          fitViewOptions={{ padding: 0.2 }}
+          minZoom={0.05}
+          maxZoom={5}
+          proOptions={{ hideAttribution: true }}
+        >
+          <Background gap={20} size={1} />
+          <Controls />
         </ReactFlow>
       </div>
     </>
@@ -2578,7 +3587,15 @@ function LiveRequestsFlowInner() {
 
 // ─── Placeholder Panel ─────────────────────────────────
 
-function PlaceholderPanel({ title, desc, icon: Icon }: { title: string; desc: string; icon: React.ComponentType<{ size: number }> }) {
+function PlaceholderPanel({
+  title,
+  desc,
+  icon: Icon,
+}: {
+  title: string
+  desc: string
+  icon: React.ComponentType<{ size: number }>
+}) {
   return (
     <Container size="lg">
       <Stack align="center" justify="center" gap="md" mih={400}>
@@ -2586,7 +3603,9 @@ function PlaceholderPanel({ title, desc, icon: Icon }: { title: string; desc: st
           <Icon size={32} />
         </ThemeIcon>
         <Title order={3}>{title}</Title>
-        <Text c="dimmed" ta="center" maw={400}>{desc}</Text>
+        <Text c="dimmed" ta="center" maw={400}>
+          {desc}
+        </Text>
       </Stack>
     </Container>
   )

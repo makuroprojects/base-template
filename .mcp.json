@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "bunx",
+      "args": ["@playwright/mcp@latest"]
+    },
+    "app-mcp": {
+      "command": "bun",
+      "args": ["run", "scripts/mcp/server.ts"],
+      "env": {
+        "MCP_SECRET": "${MCP_SECRET}"
+      }
+    }
+  }
+}
