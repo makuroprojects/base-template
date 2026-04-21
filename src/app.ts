@@ -8,6 +8,7 @@ import { prisma } from './lib/db'
 import { env } from './lib/env'
 import { addConnection, broadcastToAdmins, getOnlineUserIds, removeConnection } from './lib/presence'
 import { parseSchema } from './lib/schema-parser'
+import pkg from '../package.json'
 
 function getIp(request: Request): string {
   return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip') ?? 'unknown'
@@ -814,6 +815,7 @@ export function createApp() {
           },
           // Utility
           { method: 'GET', path: '/health', auth: 'public', category: 'utility', description: 'Health check' },
+          { method: 'GET', path: '/api/version', auth: 'public', category: 'utility', description: 'App name and version from package.json' },
           { method: 'GET', path: '/api/hello', auth: 'public', category: 'utility', description: 'Hello world (GET)' },
           { method: 'PUT', path: '/api/hello', auth: 'public', category: 'utility', description: 'Hello world (PUT)' },
           {
@@ -1773,6 +1775,12 @@ export function createApp() {
         response.headers.set('x-mcp-scope', scope)
         return response
       })
+
+      // ─── Version ─────────────────────────────────────────
+      .get('/api/version', () => ({
+        name: pkg.name,
+        version: pkg.version,
+      }))
 
       // ─── Example API ───────────────────────────────────
       .get('/api/hello', () => ({
