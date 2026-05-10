@@ -40,12 +40,14 @@ export const adminInfoRouter = new Elysia()
     take: limit })
   return { logs }
 })
-  .delete('/api/admin/logs/app', async ({}) => {
+  .delete('/api/admin/logs/app', async ({ authUser }) => {
+  const guard = guardSuperAdmin(authUser); if (guard) return guard
   await clearAppLogs()
   appLog('info', 'App logs cleared manually')
   return { ok: true }
 })
-  .delete('/api/admin/logs/audit', async ({}) => {
+  .delete('/api/admin/logs/audit', async ({ authUser }) => {
+  const guard = guardSuperAdmin(authUser); if (guard) return guard
   const { count } = await prisma.auditLog.deleteMany()
   appLog('info', `Audit logs cleared manually (${count} entries)`)
   return { ok: true, deleted: count }
@@ -63,7 +65,8 @@ export const adminInfoRouter = new Elysia()
   return { schema: parseSchema(raw) }
 })
 
-  .get('/api/admin/routes', ({}) => {
+  .get('/api/admin/routes', ({ authUser }) => {
+  const guard = guardSuperAdmin(authUser); if (guard) return guard
   const routes: { method: string; path: string; auth: string; category: string; description: string }[] = [
     // Frontend routes
     { method: 'PAGE', path: '/', auth: 'public', category: 'frontend', description: 'Landing page' },
@@ -131,7 +134,8 @@ export const adminInfoRouter = new Elysia()
     summary: { total: routes.length, byMethod, byAuth, byCategory } }
 })
 
-  .get('/api/admin/project-structure', async ({}) => {
+  .get('/api/admin/project-structure', async ({ authUser }) => {
+  const guard = guardSuperAdmin(authUser); if (guard) return guard
   const fs = await import('node:fs')
   const path = await import('node:path')
   const root = process.cwd()
@@ -254,7 +258,8 @@ export const adminInfoRouter = new Elysia()
     summary: { totalFiles: files.length, totalLines, totalExports, totalImports, byCategory } }
 })
 
-  .get('/api/admin/env-map', async ({}) => {
+  .get('/api/admin/env-map', async ({ authUser }) => {
+  const guard = guardSuperAdmin(authUser); if (guard) return guard
   const fs = await import('node:fs')
   const path = await import('node:path')
   const root = process.cwd()
@@ -310,7 +315,8 @@ export const adminInfoRouter = new Elysia()
     summary: { total: variables.length, set: setCount, unset: variables.length - setCount, required: requiredCount, byCategory } }
 })
 
-  .get('/api/admin/test-coverage', async ({}) => {
+  .get('/api/admin/test-coverage', async ({ authUser }) => {
+  const guard = guardSuperAdmin(authUser); if (guard) return guard
   const fs = await import('node:fs')
   const pathMod = await import('node:path')
   const root = process.cwd()
@@ -392,7 +398,8 @@ export const adminInfoRouter = new Elysia()
       coveragePercent: Math.round(((covered + partial * 0.5) / sourceFiles.length) * 100) } }
 })
 
-  .get('/api/admin/dependencies', async ({}) => {
+  .get('/api/admin/dependencies', async ({ authUser }) => {
+  const guard = guardSuperAdmin(authUser); if (guard) return guard
   const fs = await import('node:fs')
   const pathMod = await import('node:path')
   const root = process.cwd()
@@ -453,7 +460,8 @@ export const adminInfoRouter = new Elysia()
   return { packages: allPkgs, summary: { total: allPkgs.length, runtime, dev, byCategory } }
 })
 
-  .get('/api/admin/migrations', async ({}) => {
+  .get('/api/admin/migrations', async ({ authUser }) => {
+  const guard = guardSuperAdmin(authUser); if (guard) return guard
   const fs = await import('node:fs')
   const pathMod = await import('node:path')
   const root = process.cwd()
@@ -505,7 +513,8 @@ export const adminInfoRouter = new Elysia()
       totalChanges } }
 })
 
-  .get('/api/admin/sessions', async ({}) => {
+  .get('/api/admin/sessions', async ({ authUser }) => {
+  const guard = guardSuperAdmin(authUser); if (guard) return guard
   const onlineIds = new Set(getOnlineUserIds())
   const sessions = await prisma.session.findMany({
     include: { user: { select: { id: true, name: true, email: true, role: true, blocked: true } } },

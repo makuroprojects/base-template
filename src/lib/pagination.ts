@@ -3,8 +3,10 @@ export function parsePagination(
   defaultLimit = 50,
   maxLimit = 200,
 ) {
+  const raw = Number(query.limit)
+  const limit = raw > 0 ? Math.min(raw, maxLimit) : defaultLimit
   return {
-    limit: Math.min(Number(query.limit) || defaultLimit, maxLimit),
-    offset: Number(query.offset) || 0,
+    limit,
+    offset: Math.max(0, Number(query.offset) || 0),
   }
 }
