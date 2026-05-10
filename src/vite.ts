@@ -169,6 +169,12 @@ export async function createVite() {
     server: {
       middlewareMode: true,
       allowedHosts: true,
+      // In middlewareMode Vite can't bind its own WebSocket server.
+      // Point HMR client to the same port as the Bun app server so no
+      // separate port is needed and the "Port undefined" error is avoided.
+      hmr: {
+        clientPort: parseInt(process.env.PORT ?? '3000', 10),
+      },
     },
     appType: 'custom',
     optimizeDeps: {
