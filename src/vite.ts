@@ -169,12 +169,15 @@ export async function createVite() {
     server: {
       middlewareMode: true,
       allowedHosts: true,
-      // In middlewareMode Vite can't bind its own WebSocket server.
-      // Point HMR client to the same port as the Bun app server so no
-      // separate port is needed and the "Port undefined" error is avoided.
-      hmr: {
-        clientPort: parseInt(process.env.PORT ?? '3000', 10),
-      },
+      // Disable Vite's internal WebSocket server entirely via `ws: false`.
+      // In middlewareMode with Bun there is no Node http.Server to attach to,
+      // so Vite tries to bind a standalone WS server on port 24678. Bun's
+      // EADDRINUSE error doesn't populate e.port, causing:
+      //   "WebSocket server error: Port undefined is already in use"
+      // `ws: false` returns a noop WebSocketServer (unlike `hmr: false` which
+      // still creates the wss instance). HMR still triggers via bun --watch
+      // server restart + Vite module graph invalidation on next request.
+      ws: false,
     },
     appType: 'custom',
     optimizeDeps: {
