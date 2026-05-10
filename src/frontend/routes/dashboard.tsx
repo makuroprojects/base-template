@@ -142,7 +142,7 @@ function DashboardPage() {
         breakpoint: 'sm',
         collapsed: { mobile: !mobileOpened },
       }}
-      padding="md"
+      padding={{ base: 'sm', sm: 'md' }}
     >
       <AppShell.Header px="md" hiddenFrom="sm">
         <Group h="100%" justify="space-between">
@@ -356,10 +356,10 @@ const statsData = [
 
 function OverviewPanel() {
   return (
-    <Container size="lg">
-      <Stack gap="lg">
+    <Container size="lg" px={{ base: 0, sm: 'md' }}>
+      <Stack gap="md">
         <Group justify="space-between">
-          <Title order={3}>Overview</Title>
+          <Title order={3} fz={{ base: 'lg', sm: 'xl' }}>Overview</Title>
           <Group gap="xs">
             <Tooltip label="Notifications">
               <ActionIcon variant="subtle" color="gray">
@@ -492,9 +492,9 @@ function OverviewPanel() {
 
 function AnalyticsPanel() {
   return (
-    <Container size="lg">
-      <Stack gap="lg">
-        <Title order={3}>Analytics</Title>
+    <Container size="lg" px={{ base: 0, sm: 'md' }}>
+      <Stack gap="md">
+        <Title order={3} fz={{ base: 'lg', sm: 'xl' }}>Analytics</Title>
 
         <SimpleGrid cols={{ base: 1, sm: 3 }}>
           {[
@@ -524,45 +524,35 @@ function AnalyticsPanel() {
         </SimpleGrid>
 
         <Card withBorder padding="lg" radius="md">
-          <Text fw={600} mb="md">
-            Top Pages
-          </Text>
-          <Table highlightOnHover>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Page</Table.Th>
-                <Table.Th ta="right">Views</Table.Th>
-                <Table.Th ta="right">Unique</Table.Th>
-                <Table.Th ta="right">Bounce</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {[
-                { page: '/home', views: '8,234', unique: '5,120', bounce: '28%' },
-                { page: '/products', views: '5,678', unique: '3,456', bounce: '35%' },
-                { page: '/pricing', views: '3,912', unique: '2,890', bounce: '22%' },
-                { page: '/about', views: '2,345', unique: '1,780', bounce: '41%' },
-                { page: '/contact', views: '1,567', unique: '1,230', bounce: '38%' },
-              ].map((row) => (
-                <Table.Tr key={row.page}>
-                  <Table.Td>
-                    <Text size="sm" fw={500}>
-                      {row.page}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td ta="right">
-                    <Text size="sm">{row.views}</Text>
-                  </Table.Td>
-                  <Table.Td ta="right">
-                    <Text size="sm">{row.unique}</Text>
-                  </Table.Td>
-                  <Table.Td ta="right">
-                    <Text size="sm">{row.bounce}</Text>
-                  </Table.Td>
+          <Text fw={600} mb="md">Top Pages</Text>
+          <Table.ScrollContainer minWidth={400}>
+            <Table highlightOnHover>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Page</Table.Th>
+                  <Table.Th ta="right">Views</Table.Th>
+                  <Table.Th ta="right">Unique</Table.Th>
+                  <Table.Th ta="right">Bounce</Table.Th>
                 </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+              </Table.Thead>
+              <Table.Tbody>
+                {[
+                  { page: '/home', views: '8,234', unique: '5,120', bounce: '28%' },
+                  { page: '/products', views: '5,678', unique: '3,456', bounce: '35%' },
+                  { page: '/pricing', views: '3,912', unique: '2,890', bounce: '22%' },
+                  { page: '/about', views: '2,345', unique: '1,780', bounce: '41%' },
+                  { page: '/contact', views: '1,567', unique: '1,230', bounce: '38%' },
+                ].map((row) => (
+                  <Table.Tr key={row.page}>
+                    <Table.Td><Text size="sm" fw={500}>{row.page}</Text></Table.Td>
+                    <Table.Td ta="right"><Text size="sm">{row.views}</Text></Table.Td>
+                    <Table.Td ta="right"><Text size="sm">{row.unique}</Text></Table.Td>
+                    <Table.Td ta="right"><Text size="sm">{row.bounce}</Text></Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Table.ScrollContainer>
         </Card>
       </Stack>
     </Container>
@@ -590,56 +580,44 @@ const ordersData = [
 
 function OrdersPanel() {
   return (
-    <Container size="lg">
-      <Stack gap="lg">
+    <Container size="lg" px={{ base: 0, sm: 'md' }}>
+      <Stack gap="md">
         <Group justify="space-between">
-          <Title order={3}>Orders</Title>
+          <Title order={3} fz={{ base: 'lg', sm: 'xl' }}>Orders</Title>
           <Badge variant="light" size="lg">
             {ordersData.length} orders
           </Badge>
         </Group>
 
         <Card withBorder radius="md" p={0}>
-          <Table highlightOnHover>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Order ID</Table.Th>
-                <Table.Th>Customer</Table.Th>
-                <Table.Th>Amount</Table.Th>
-                <Table.Th>Status</Table.Th>
-                <Table.Th ta="right">Date</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {ordersData.map((order) => (
-                <Table.Tr key={order.id}>
-                  <Table.Td>
-                    <Text size="sm" fw={500}>
-                      {order.id}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm">{order.customer}</Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm" fw={500}>
-                      {order.amount}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Badge color={orderStatusColor[order.status]} variant="light" size="sm">
-                      {order.status}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td ta="right">
-                    <Text size="sm" c="dimmed">
-                      {order.date}
-                    </Text>
-                  </Table.Td>
+          <Table.ScrollContainer minWidth={500}>
+            <Table highlightOnHover>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Order ID</Table.Th>
+                  <Table.Th>Customer</Table.Th>
+                  <Table.Th>Amount</Table.Th>
+                  <Table.Th>Status</Table.Th>
+                  <Table.Th ta="right">Date</Table.Th>
                 </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+              </Table.Thead>
+              <Table.Tbody>
+                {ordersData.map((order) => (
+                  <Table.Tr key={order.id}>
+                    <Table.Td><Text size="sm" fw={500}>{order.id}</Text></Table.Td>
+                    <Table.Td><Text size="sm">{order.customer}</Text></Table.Td>
+                    <Table.Td><Text size="sm" fw={500}>{order.amount}</Text></Table.Td>
+                    <Table.Td>
+                      <Badge color={orderStatusColor[order.status]} variant="light" size="sm">
+                        {order.status}
+                      </Badge>
+                    </Table.Td>
+                    <Table.Td ta="right"><Text size="sm" c="dimmed">{order.date}</Text></Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Table.ScrollContainer>
         </Card>
       </Stack>
     </Container>

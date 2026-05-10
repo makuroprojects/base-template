@@ -42,7 +42,7 @@ export function UserLogsPanel() {
   const actionOptions = Object.entries(actionBadge).map(([key, val]) => ({ value: key, label: val.label }))
 
   return (
-    <Container size="lg">
+    <Container size="lg" px={{ base: 0, sm: 'md' }}>
       <Stack gap="lg">
         <Group justify="space-between">
           <Group gap="sm">
@@ -63,13 +63,14 @@ export function UserLogsPanel() {
           </Group>
         </Group>
 
-        <Group gap="sm">
-          <Select placeholder="Filter by user" data={userOptions} value={userFilter} onChange={setUserFilter} clearable searchable size="xs" w={250} leftSection={<TbUser size={14} />} />
-          <Select placeholder="Filter by action" data={actionOptions} value={actionFilter} onChange={setActionFilter} clearable size="xs" w={200} leftSection={<TbFileText size={14} />} />
+        <Group gap="sm" wrap="wrap">
+          <Select placeholder="Filter by user" data={userOptions} value={userFilter} onChange={setUserFilter} clearable searchable size="xs" style={{ flex: '1 1 180px', minWidth: 180 }} leftSection={<TbUser size={14} />} />
+          <Select placeholder="Filter by action" data={actionOptions} value={actionFilter} onChange={setActionFilter} clearable size="xs" style={{ flex: '1 1 160px', minWidth: 160 }} leftSection={<TbFileText size={14} />} />
         </Group>
 
         <Card withBorder radius="md" p={0}>
-          <Table highlightOnHover>
+          <Table.ScrollContainer minWidth={560}>
+            <Table highlightOnHover>
             <Table.Thead>
               <Table.Tr>
                 <Table.Th w={180}>Time</Table.Th>
@@ -115,6 +116,7 @@ export function UserLogsPanel() {
               })}
             </Table.Tbody>
           </Table>
+          </Table.ScrollContainer>
         </Card>
 
         {logs.length > PAGE_SIZE && (

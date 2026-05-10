@@ -34,7 +34,7 @@ export function AppLogsPanel() {
   useEffect(() => { setPage(1) }, [levelFilter])
 
   return (
-    <Container size="lg">
+    <Container size="lg" px={{ base: 0, sm: 'md' }}>
       <Stack gap="lg">
         <Group justify="space-between">
           <Group gap="sm">
@@ -67,7 +67,8 @@ export function AppLogsPanel() {
         </Group>
 
         <Card withBorder radius="md" p={0}>
-          <Table highlightOnHover>
+          <Table.ScrollContainer minWidth={480}>
+            <Table highlightOnHover>
             <Table.Thead>
               <Table.Tr>
                 <Table.Th w={180}>Time</Table.Th>
@@ -102,6 +103,7 @@ export function AppLogsPanel() {
               })}
             </Table.Tbody>
           </Table>
+          </Table.ScrollContainer>
         </Card>
 
         {ordered.length > PAGE_SIZE && (

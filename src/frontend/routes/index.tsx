@@ -13,31 +13,66 @@ export const indexRoute = createRoute({
 
 function HomePage() {
   return (
-    <Container size="sm" py="xl">
-      <Box style={{ position: 'absolute', top: 16, right: 16 }}>
+    <Box style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
+      {/* Header bar — always visible, full width */}
+      <Box
+        px={{ base: 'md', sm: 'xl' }}
+        py="sm"
+        style={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}
+      >
         <ThemeToggle />
       </Box>
-      <Stack align="center" gap="lg">
-        <Group gap="lg">
-          <SiBun size={64} color="#fbf0df" />
-          <TbBrandReact size={64} color="#61dafb" />
-        </Group>
 
-        <Title order={1}>Bun + Elysia + Vite + React</Title>
+      {/* Main content — centered, fills remaining space */}
+      <Container
+        size="sm"
+        px={{ base: 'md', sm: 'xl' }}
+        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      >
+        <Stack align="center" gap="md" w="100%">
+          <Group gap="md">
+            <SiBun size={48} color="#fbf0df" style={{ width: 'clamp(40px, 10vw, 64px)', height: 'clamp(40px, 10vw, 64px)' }} />
+            <TbBrandReact size={48} color="#61dafb" style={{ width: 'clamp(40px, 10vw, 64px)', height: 'clamp(40px, 10vw, 64px)' }} />
+          </Group>
 
-        <Text c="dimmed" ta="center" maw={480}>
-          Full-stack starter template with Mantine UI, TanStack Router, and session-based auth.
-        </Text>
+          <Title order={1} ta="center" fz={{ base: 'xl', sm: '2xl', md: '3xl' }}>
+            Bun + Elysia + Vite + React
+          </Title>
 
-        <Group>
-          <Button component={Link} to="/login" leftSection={<TbLogin size={18} />} variant="filled">
-            Login
-          </Button>
-          <Button component={Link} to="/dashboard" leftSection={<TbRocket size={18} />} variant="light">
-            Dashboard
-          </Button>
-        </Group>
-      </Stack>
-    </Container>
+          <Text c="dimmed" ta="center" maw={480} fz={{ base: 'sm', sm: 'md' }} px={{ base: 'xs', sm: 0 }}>
+            Full-stack starter template with Mantine UI, TanStack Router, and session-based auth.
+          </Text>
+
+          <Group
+            gap="sm"
+            wrap="wrap"
+            justify="center"
+            w="100%"
+            maw={{ base: '100%', xs: 320 }}
+          >
+            <Button
+              component={Link}
+              to="/login"
+              leftSection={<TbLogin size={18} />}
+              variant="filled"
+              fullWidth
+              style={{ flex: '1 1 120px', minWidth: 120 }}
+            >
+              Login
+            </Button>
+            <Button
+              component={Link}
+              to="/dashboard"
+              leftSection={<TbRocket size={18} />}
+              variant="light"
+              fullWidth
+              style={{ flex: '1 1 120px', minWidth: 120 }}
+            >
+              Dashboard
+            </Button>
+          </Group>
+        </Stack>
+      </Container>
+    </Box>
   )
 }

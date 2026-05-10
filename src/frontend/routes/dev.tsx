@@ -169,7 +169,7 @@ function DevPage() {
         breakpoint: 'sm',
         collapsed: { mobile: !mobileOpened },
       }}
-      padding="md"
+      padding={{ base: 'sm', sm: 'md' }}
     >
       <AppShell.Header px="md" hiddenFrom="sm">
         <Group h="100%" justify="space-between">

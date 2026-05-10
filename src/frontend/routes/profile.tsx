@@ -1,4 +1,4 @@
-import { Avatar, Badge, Button, Container, Group, Paper, Stack, Text, Title } from '@mantine/core'
+import { Avatar, Badge, Button, Container, Divider, Group, Paper, Stack, Text, Title } from '@mantine/core'
 import { modals } from '@mantine/modals'
 import { createRoute, Link, redirect } from '@tanstack/react-router'
 import { TbLogout, TbUser } from 'react-icons/tb'
@@ -32,6 +32,7 @@ export const profileRoute = createRoute({
 
 const roleBadgeColor: Record<string, string> = {
   USER: 'blue',
+  QC: 'cyan',
   ADMIN: 'violet',
   SUPER_ADMIN: 'red',
 }
@@ -42,11 +43,13 @@ function ProfilePage() {
   const user = data?.user
 
   return (
-    <Container size="sm" py="xl">
-      <Stack gap="xl">
-        <Group justify="space-between">
-          <Title order={2}>Profile</Title>
-          <Group gap="xs">
+    <Container size="sm" px={{ base: 'md', sm: 'lg' }} py={{ base: 'md', sm: 'xl' }}>
+      <Stack gap="md">
+
+        {/* Header row — stacks on very small screens */}
+        <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+          <Title order={2} fz={{ base: 'xl', sm: '2xl' }}>Profile</Title>
+          <Group gap="xs" wrap="wrap">
             <ThemeToggle size="sm" />
             {user?.role === 'SUPER_ADMIN' && (
               <Button component={Link} to="/dev" variant="light" size="xs">
@@ -61,7 +64,8 @@ function ProfilePage() {
             <Button
               variant="light"
               color="red"
-              leftSection={<TbLogout size={16} />}
+              size="xs"
+              leftSection={<TbLogout size={14} />}
               onClick={() =>
                 modals.openConfirmModal({
                   title: 'Logout',
@@ -78,18 +82,15 @@ function ProfilePage() {
           </Group>
         </Group>
 
-        <Paper withBorder p="xl" radius="md">
+        {/* Avatar card */}
+        <Paper withBorder p={{ base: 'lg', sm: 'xl' }} radius="md">
           <Stack align="center" gap="md">
-            <Avatar color="blue" radius="xl" size={80}>
+            <Avatar color="blue" radius="xl" size={64}>
               {user?.name?.charAt(0).toUpperCase()}
             </Avatar>
             <div style={{ textAlign: 'center' }}>
-              <Text fw={600} size="lg">
-                {user?.name}
-              </Text>
-              <Text c="dimmed" size="sm">
-                {user?.email}
-              </Text>
+              <Text fw={600} size="lg">{user?.name}</Text>
+              <Text c="dimmed" size="sm" style={{ wordBreak: 'break-all' }}>{user?.email}</Text>
             </div>
             <Badge color={roleBadgeColor[user?.role ?? 'USER']} variant="light" size="lg">
               {user?.role}
@@ -97,32 +98,24 @@ function ProfilePage() {
           </Stack>
         </Paper>
 
-        <Paper withBorder p="lg" radius="md">
+        {/* Account info card */}
+        <Paper withBorder p={{ base: 'md', sm: 'lg' }} radius="md">
           <Stack gap="sm">
             <Group gap="xs">
               <TbUser size={16} />
-              <Text fw={500} size="sm">
-                Account Info
-              </Text>
+              <Text fw={500} size="sm">Account Info</Text>
             </Group>
-            <Group justify="space-between">
-              <Text size="sm" c="dimmed">
-                Name
-              </Text>
-              <Text size="sm">{user?.name}</Text>
-            </Group>
-            <Group justify="space-between">
-              <Text size="sm" c="dimmed">
-                Email
-              </Text>
-              <Text size="sm">{user?.email}</Text>
-            </Group>
-            <Group justify="space-between">
-              <Text size="sm" c="dimmed">
-                Role
-              </Text>
-              <Text size="sm">{user?.role}</Text>
-            </Group>
+            <Divider />
+            {[
+              { label: 'Name', value: user?.name },
+              { label: 'Email', value: user?.email },
+              { label: 'Role', value: user?.role },
+            ].map(({ label, value }) => (
+              <Group key={label} justify="space-between" wrap="nowrap" gap="xs">
+                <Text size="sm" c="dimmed" style={{ flexShrink: 0 }}>{label}</Text>
+                <Text size="sm" ta="right" style={{ wordBreak: 'break-all' }}>{value}</Text>
+              </Group>
+            ))}
           </Stack>
         </Paper>
       </Stack>

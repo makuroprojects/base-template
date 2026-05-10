@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Center, Divider, Paper, PasswordInput, Stack, Text, TextInput, Title } from '@mantine/core'
+import { Alert, Box, Button, Divider, Paper, PasswordInput, Stack, Text, TextInput, Title } from '@mantine/core'
 import { createRoute, redirect } from '@tanstack/react-router'
 import { useState } from 'react'
 import { FcGoogle } from 'react-icons/fc'
@@ -68,67 +68,107 @@ function LoginPage() {
   }
 
   return (
-    <Center mih="100vh" style={{ position: 'relative' }}>
-      <Box style={{ position: 'absolute', top: 16, right: 16 }}>
+    <Box
+      style={{
+        minHeight: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* Header with theme toggle */}
+      <Box
+        px={{ base: 'md', sm: 'xl' }}
+        py="sm"
+        style={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}
+      >
         <ThemeToggle />
       </Box>
-      <Paper shadow="md" p="xl" radius="md" w={400} withBorder>
-        <form onSubmit={handleSubmit}>
-          <Stack gap="md">
-            <Title order={2} ta="center">
-              Login
-            </Title>
 
-            <Text c="dimmed" size="sm" ta="center">
-              Super Admin: <strong>superadmin@example.com</strong> / <strong>superadmin123</strong>
-              <br />
-              Admin: <strong>admin@example.com</strong> / <strong>admin123</strong>
-              <br />
-              User: <strong>user@example.com</strong> / <strong>user123</strong>
-            </Text>
+      {/* Centered login card */}
+      <Box
+        px={{ base: 'md', xs: 'lg', sm: 0 }}
+        style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingBottom: 'env(safe-area-inset-bottom, 16px)',
+        }}
+      >
+        <Paper
+          shadow="md"
+          p={{ base: 'lg', sm: 'xl' }}
+          radius="md"
+          w={{ base: '100%', xs: 400 }}
+          maw={400}
+          withBorder
+        >
+          <form onSubmit={handleSubmit}>
+            <Stack gap="md">
+              <Title order={2} ta="center" fz={{ base: 'xl', sm: '2xl' }}>
+                Login
+              </Title>
 
-            {(loginError || searchError) && (
-              <Alert icon={<TbAlertCircle size={16} />} color="red" variant="light">
-                {loginError ?? 'Login dengan Google gagal, coba lagi.'}
-              </Alert>
-            )}
+              <Text c="dimmed" size="sm" ta="center">
+                Super Admin: <strong>superadmin@example.com</strong> / <strong>superadmin123</strong>
+                <br />
+                Admin: <strong>admin@example.com</strong> / <strong>admin123</strong>
+                <br />
+                User: <strong>user@example.com</strong> / <strong>user123</strong>
+              </Text>
 
-            <TextInput
-              label="Email"
-              placeholder="email@example.com"
-              leftSection={<TbMail size={16} />}
-              value={email}
-              onChange={(e) => setEmail(e.currentTarget.value)}
-              required
-            />
+              {(loginError || searchError) && (
+                <Alert icon={<TbAlertCircle size={16} />} color="red" variant="light">
+                  {loginError ?? 'Login dengan Google gagal, coba lagi.'}
+                </Alert>
+              )}
 
-            <PasswordInput
-              label="Password"
-              placeholder="Password"
-              leftSection={<TbLock size={16} />}
-              value={password}
-              onChange={(e) => setPassword(e.currentTarget.value)}
-              required
-            />
+              <TextInput
+                label="Email"
+                placeholder="email@example.com"
+                leftSection={<TbMail size={16} />}
+                value={email}
+                onChange={(e) => setEmail(e.currentTarget.value)}
+                size="md"
+                required
+              />
 
-            <Button type="submit" fullWidth leftSection={<TbLogin size={18} />} loading={isLoading}>
-              Sign in
-            </Button>
+              <PasswordInput
+                label="Password"
+                placeholder="Password"
+                leftSection={<TbLock size={16} />}
+                value={password}
+                onChange={(e) => setPassword(e.currentTarget.value)}
+                size="md"
+                required
+              />
 
-            <Divider label="atau" labelPosition="center" />
+              <Button
+                type="submit"
+                fullWidth
+                size="md"
+                leftSection={<TbLogin size={18} />}
+                loading={isLoading}
+              >
+                Sign in
+              </Button>
 
-            <Button
-              onClick={handleGoogleLogin}
-              fullWidth
-              variant="default"
-              leftSection={<FcGoogle size={18} />}
-              type="button"
-            >
-              Login dengan Google
-            </Button>
-          </Stack>
-        </form>
-      </Paper>
-    </Center>
+              <Divider label="atau" labelPosition="center" />
+
+              <Button
+                onClick={handleGoogleLogin}
+                fullWidth
+                size="md"
+                variant="default"
+                leftSection={<FcGoogle size={18} />}
+                type="button"
+              >
+                Login dengan Google
+              </Button>
+            </Stack>
+          </form>
+        </Paper>
+      </Box>
+    </Box>
   )
 }

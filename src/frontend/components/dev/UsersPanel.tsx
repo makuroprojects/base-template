@@ -63,7 +63,7 @@ export function UsersPanel() {
   const users = data?.users ?? []
 
   return (
-    <Container size="lg">
+    <Container size="lg" px={{ base: 0, sm: 'md' }}>
       <Stack gap="lg">
         <Group justify="space-between">
           <Title order={3}>User Management</Title>
@@ -71,7 +71,8 @@ export function UsersPanel() {
         </Group>
 
         <Card withBorder radius="md" p={0}>
-          <Table highlightOnHover>
+          <Table.ScrollContainer minWidth={480}>
+            <Table highlightOnHover>
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>User</Table.Th>
@@ -173,6 +174,7 @@ export function UsersPanel() {
               })}
             </Table.Tbody>
           </Table>
+          </Table.ScrollContainer>
         </Card>
       </Stack>
     </Container>

@@ -28,7 +28,7 @@ export function OverviewPanel() {
   }
 
   return (
-    <Container size="lg">
+    <Container size="lg" px={{ base: 0, sm: 'md' }}>
       <Stack gap="lg">
         <Title order={3}>Overview</Title>
         <SimpleGrid cols={{ base: 1, sm: 4 }}>
