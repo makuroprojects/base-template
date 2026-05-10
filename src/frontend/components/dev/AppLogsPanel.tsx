@@ -36,12 +36,12 @@ export function AppLogsPanel() {
   return (
     <Container size="lg" px={{ base: 0, sm: 'md' }}>
       <Stack gap="lg">
-        <Group justify="space-between">
+        <Group justify="space-between" wrap="wrap" gap="sm">
           <Group gap="sm">
             <Title order={3}>App Logs</Title>
             <Badge variant="light" color="gray" size="sm">redis</Badge>
           </Group>
-          <Group gap="sm">
+          <Group gap="sm" wrap="wrap">
             <SegmentedControl
               size="xs"
               value={levelFilter}

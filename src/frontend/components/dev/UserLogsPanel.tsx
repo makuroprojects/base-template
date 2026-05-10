@@ -64,8 +64,8 @@ export function UserLogsPanel() {
         </Group>
 
         <Group gap="sm" wrap="wrap">
-          <Select placeholder="Filter by user" data={userOptions} value={userFilter} onChange={setUserFilter} clearable searchable size="xs" style={{ flex: '1 1 180px', minWidth: 180 }} leftSection={<TbUser size={14} />} />
-          <Select placeholder="Filter by action" data={actionOptions} value={actionFilter} onChange={setActionFilter} clearable size="xs" style={{ flex: '1 1 160px', minWidth: 160 }} leftSection={<TbFileText size={14} />} />
+          <Select placeholder="Filter by user" data={userOptions} value={userFilter} onChange={setUserFilter} clearable searchable size="xs" w={{ base: '100%', xs: 200, sm: 240 }} leftSection={<TbUser size={14} />} />
+          <Select placeholder="Filter by action" data={actionOptions} value={actionFilter} onChange={setActionFilter} clearable size="xs" w={{ base: '100%', xs: 180, sm: 200 }} leftSection={<TbFileText size={14} />} />
         </Group>
 
         <Card withBorder radius="md" p={0}>

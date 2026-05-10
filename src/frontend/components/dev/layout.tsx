@@ -1,5 +1,5 @@
 import { SegmentedControl } from '@mantine/core'
-import type { Edge, Node } from '@xyflow/react'
+import type { Edge, Node, NodeChange, Viewport } from '@xyflow/react'
 import { useEdgesState, useNodesState, useReactFlow } from '@xyflow/react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import ELK from 'elkjs/lib/elk.bundled.js'
@@ -127,7 +127,7 @@ export function useFlowAutoSave(key: string) {
       return r ? (JSON.parse(r) as Record<string, { x: number; y: number }>) : null
     } catch { return null }
   }, [key])
-  const handleNodesChange = useCallback((changes: any) => {
+  const handleNodesChange = useCallback((changes: NodeChange<Node>[]) => {
     onNodesChange(changes)
     clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(() => {
@@ -139,7 +139,7 @@ export function useFlowAutoSave(key: string) {
       })
     }, 500)
   }, [onNodesChange, key, setNodes])
-  const handleMoveEnd = useCallback((_e: any, vp: { x: number; y: number; zoom: number }) => {
+  const handleMoveEnd = useCallback((_e: MouseEvent | TouchEvent | null, vp: Viewport) => {
     clearTimeout(vpTimer.current)
     vpTimer.current = setTimeout(() => localStorage.setItem(`${key}:viewport`, JSON.stringify(vp)), 500)
   }, [key])

@@ -32,6 +32,8 @@ import {
   Handle,
   MarkerType,
   type Node,
+  type NodeChange,
+  type Viewport,
   Position,
   ReactFlow,
   ReactFlowProvider,
@@ -308,14 +310,14 @@ function DatabasePanelInner() {
   }, [initialNodes, initialEdges, setEdges, setNodes])
 
   // Debounced auto-save viewport on pan/zoom
-  const handleMoveEnd = useCallback((_event: any, viewport: { x: number; y: number; zoom: number }) => {
+  const handleMoveEnd = useCallback((_event: MouseEvent | TouchEvent | null, viewport: Viewport) => {
     clearTimeout(viewportTimer.current)
     viewportTimer.current = setTimeout(() => saveViewport(viewport), 500)
   }, [])
 
   // Debounced auto-save on node drag
   const handleNodesChange = useCallback(
-    (changes: any) => {
+    (changes: NodeChange<Node>[]) => {
       onNodesChange(changes)
       clearTimeout(saveTimer.current)
       saveTimer.current = setTimeout(() => {

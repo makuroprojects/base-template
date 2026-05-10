@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSession } from './useAuth'
 
+interface PresenceMessage {
+  type: 'presence'
+  online: string[]
+}
+
 export function usePresence() {
   const { data } = useSession()
   const [onlineUserIds, setOnlineUserIds] = useState<string[]>([])
@@ -15,8 +20,8 @@ export function usePresence() {
       const ws = new WebSocket(`${proto}://${location.host}/ws/presence`)
       wsRef.current = ws
 
-      ws.onmessage = (e) => {
-        const msg = JSON.parse(e.data)
+      ws.onmessage = (e: MessageEvent<string>) => {
+        const msg = JSON.parse(e.data) as PresenceMessage
         if (msg.type === 'presence') {
           setOnlineUserIds(msg.online)
         }
