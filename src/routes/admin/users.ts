@@ -54,7 +54,7 @@ export const adminUsersRouter = new Elysia()
     const { blocked } = (await request.json()) as { blocked: boolean }
 
     const sessionTokens = blocked
-      ? (await prisma.session.findMany({ where: { userId: params.id }, select: { token: true } })).map(s => s.token)
+      ? (await prisma.session.findMany({ where: { userId: params.id }, select: { token: true } })).map((s: { token: string }) => s.token)
       : []
 
     const [user] = await prisma.$transaction([

@@ -513,7 +513,7 @@ export const adminInfoRouter = new Elysia()
     take: 200 })
 
   const now = new Date()
-  const result = sessions.map((s) => ({
+  const result = sessions.map((s: typeof sessions[number]) => ({
     id: s.id,
     userId: s.user.id,
     userName: s.user.name,

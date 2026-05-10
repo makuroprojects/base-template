@@ -61,7 +61,7 @@ export const ticketTools: ToolModule = {
         })
         return jsonText({
           count: tickets.length,
-          summary: tickets.map(t => summarize(t)),
+          summary: tickets.map((t: any) => summarize(t)),
           tickets,
         })
       },

@@ -87,7 +87,7 @@ export const dbTools: ToolModule = {
         })
         return jsonText({
           count: sessions.length,
-          sessions: sessions.map((s) => ({
+          sessions: sessions.map((s: any) => ({
             id: s.id,
             token: `${s.token.slice(0, 8)}…`,
             userId: s.userId,
