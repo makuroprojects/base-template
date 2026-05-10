@@ -2,7 +2,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 import react from '@vitejs/plugin-react'
 import type { Plugin } from 'vite'
-import { createServer as createViteServer } from 'vite'
+import { createLogger, createServer as createViteServer } from 'vite'
+
+const viteLogger = createLogger()
 
 /**
  * Custom Vite plugin: inject data-inspector-* attributes ke JSX via regex.
@@ -154,7 +156,7 @@ function dedupeRefreshPlugin(): Plugin {
 }
 
 export async function createVite() {
-  return createViteServer({
+  const vite = await createViteServer({
     root: process.cwd(),
     resolve: {
       alias: {
@@ -166,22 +168,40 @@ export async function createVite() {
       react(),
       dedupeRefreshPlugin(),
     ],
+    // Suppress the spurious "WebSocket server error: Port undefined is already
+    // in use" that Bun emits. Bun doesn't set e.port on EADDRINUSE so Vite
+    // prints "Port undefined". HMR is actually working — this is a Bun bug.
+    customLogger: {
+      info: (msg, opts) => viteLogger.info(msg, opts),
+      warn: (msg, opts) => viteLogger.warn(msg, opts),
+      warnOnce: (msg, opts) => viteLogger.warnOnce(msg, opts),
+      error: (msg, opts) => {
+        if (msg.includes('WebSocket server error') && msg.includes('undefined')) return
+        viteLogger.error(msg, opts)
+      },
+      clearScreen: (type) => viteLogger.clearScreen(type),
+      hasErrorLogged: (err) => viteLogger.hasErrorLogged(err),
+      hasWarned: viteLogger.hasWarned,
+    },
     server: {
       middlewareMode: true,
       allowedHosts: true,
-      // Disable Vite's internal WebSocket server entirely via `ws: false`.
-      // In middlewareMode with Bun there is no Node http.Server to attach to,
-      // so Vite tries to bind a standalone WS server on port 24678. Bun's
-      // EADDRINUSE error doesn't populate e.port, causing:
-      //   "WebSocket server error: Port undefined is already in use"
-      // `ws: false` returns a noop WebSocketServer (unlike `hmr: false` which
-      // still creates the wss instance). HMR still triggers via bun --watch
-      // server restart + Vite module graph invalidation on next request.
-      ws: false,
+      // HMR WebSocket runs on a dedicated port (PORT+1) separate from the Bun
+      // app server. In middlewareMode Bun cannot share its server with Vite's
+      // WebSocket, so Vite binds its own WS server. Using PORT+1 means:
+      // - No conflict with the app port
+      // - Each cloned instance gets a unique HMR port (3112, 3113, etc.)
+      // - bun --watch restarts don't race on port 24678 (Vite default)
+      hmr: {
+        port: parseInt(process.env.PORT ?? '3000', 10) + 1,
+        clientPort: parseInt(process.env.PORT ?? '3000', 10) + 1,
+      },
     },
     appType: 'custom',
     optimizeDeps: {
       include: ['react', 'react-dom'],
     },
   })
+
+  return vite
 }
